@@ -221,29 +221,44 @@ Each iteration follows this fixed process:
 
 ### Definition of Done
 
-A backlog item is **Done** when all of the following are true:
+A backlog item is **Done** when **all** of the following are true. There is no
+"pending" state — an item is either Done or it is not. Partial completions are not
+merged to `master`.
+
+**Before implementation starts**
+- [ ] Acceptance criteria written and agreed — added to `docs/requirements.md` (game
+  features) or recorded in the PR description (infrastructure items with no game-facing
+  behaviour); criteria must be specific enough to be checked, not just described
 
 **Code**
-- [ ] Feature behaves as specified by the finalised acceptance criteria in `docs/requirements.md`
-- [ ] All new code has corresponding unit tests (GoogleTest); coverage of new logic ≥ 80%
-- [ ] Integration test exists or manual test procedure documented (for hardware-dependent items)
+- [ ] Every acceptance criterion has been manually verified to pass
+- [ ] The feature builds without errors on at least one target (host or RPi). For
+  build-system items, `cmake -B build && cmake --build build` must complete cleanly
+- [ ] All new logic has corresponding unit tests (GoogleTest); coverage ≥ 80%
+  — *legitimately waived only for items with no testable logic (e.g. pure CMake
+  changes); waiver must be stated explicitly in the PR description*
 - [ ] `clang-tidy` reports zero warnings on new/modified files
-- [ ] CI pipeline (build + lint + unit tests) is green on the PR
-- [ ] No raw owning pointers introduced; RAII throughout
+  — *legitimately waived until INF-3 is merged; state this explicitly*
+- [ ] CI pipeline (build + lint + unit tests) is green
+  — *legitimately waived until INF-4 is merged; state this explicitly*
+- [ ] Integration test exists or manual test procedure documented
+  (for any item that touches hardware)
+- [ ] No raw owning pointers; RAII throughout
 - [ ] No magic numbers; all constants are `constexpr` named values
 
 **Documentation**
-- [ ] `docs/requirements.md` — affected entries promoted from outline to final; any
-  implementation-driven changes to scope or values recorded
-- [ ] `docs/architecture.md` — updated to reflect any design decisions made or changed
-  during implementation (new interfaces, revised ownership rules, etc.)
-- [ ] Test descriptions — each GoogleTest `TEST` / `TEST_F` has a one-line comment stating
-  what it verifies; integration test procedures updated in `tests/integration/`
-- [ ] `CHANGELOG.md` entry drafted (merged by the PR process)
+- [ ] `docs/requirements.md` — acceptance criteria entry exists (game features:
+  promoted from outline to final; infrastructure: PR description suffices)
+- [ ] `docs/architecture.md` — updated if any design decision was made or changed
+  during implementation
+- [ ] Test descriptions — each `TEST` / `TEST_F` has a one-line comment stating what
+  it verifies; integration procedures updated in `tests/integration/` where applicable
+- [ ] `CHANGELOG.md` entry added
 
 **Process**
-- [ ] PR description references the backlog item ID and the finalised acceptance criteria
-- [ ] Merged to `main` via PR (no direct commits)
+- [ ] All legitimate waivers (clang-tidy, CI, tests) explicitly stated in the PR/merge
+  message with the reason, not silently omitted
+- [ ] Merged to `master` via a feature branch (no direct commits to `master`)
 
 ---
 
@@ -263,7 +278,7 @@ A backlog item is **Done** when all of the following are true:
 | Document | Status |
 |----------|--------|
 | `docs/plan.md` | **M3 final** — 42-item backlog, 8 vertical slices, dependencies explicit |
-| Backlog progress | **INF-1** done (pending first build verification); INF-2 next |
+| Backlog progress | **INF-1** blocked — cmake not installed on host; build unverified. Acceptance criteria not formally written. Not Done. |
 | `docs/architecture.md` | **M2 final** — all open questions resolved |
 | `docs/requirements.md` | **M1 outline complete** — scope decisions confirmed, parameters TBD at feature selection |
 | `docs/release.md` | Not started (MR) |
