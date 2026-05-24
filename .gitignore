@@ -1,0 +1,19 @@
+build/
+out/
+cmake-build-*/
+.cache/
+
+# FetchContent downloaded sources and builds
+_deps/
+
+# IDE
+.vscode/settings.json
+.idea/
+*.user
+
+# Compiled objects and libraries
+*.o
+*.a
+*.so
+*.dll
+*.exe

@@ -37,6 +37,9 @@ In the course of this development the following good coding practices will be fo
 - **Interface:** `/dev/input/js0` (Linux joystick API)
 - **Test command:** `jstest /dev/input/js0`
 
+### Audio
+- **Device:** `plughw:1,0` (HDMI card 1)
+- **Confirmed:** sine wave test passed at 48000Hz stereo
 ---
 
 ## Toolchain Decisions
