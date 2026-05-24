@@ -233,5 +233,5 @@ A backlog item is **Done** when all of the following are true:
 |----------|--------|
 | `docs/plan.md` | **Done** (this file) |
 | `docs/architecture.md` | **M0 outline complete** — 7 open questions for M2 |
-| `docs/requirements.md` | Not started (M1) |
+| `docs/requirements.md` | **M1 outline complete** — scope decisions confirmed, parameters TBD at feature selection |
 | `docs/release.md` | Not started (MR) |
