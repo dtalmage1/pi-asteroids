@@ -316,7 +316,36 @@ All scope questions resolved during M1 review.
 
 ---
 
-## 5. Out of Scope for v1.0
+## 5. Infrastructure Requirements
+
+Infrastructure items have no game-facing behaviour. Their acceptance criteria are
+recorded here rather than in PR descriptions so they are traceable.
+
+### IR-1 CMake Build Skeleton **[FINAL]**
+
+**Acceptance criteria — all must pass before INF-1 is Done:**
+
+1. `cmake -B build` completes with exit code 0 and no errors (warnings are
+   acceptable during this item; clang-tidy not yet configured)
+2. `cmake --build build` completes with exit code 0
+3. The `asteroids` binary exists in the build tree and exits with code 0 when run
+4. Six CMake targets are defined and build successfully:
+   `lib_game`, `lib_platform`, `lib_rendering`, `lib_input`, `lib_audio`, `asteroids`
+5. `lib_game` has no SDL2 or SDL2_mixer link dependency (verified by inspecting
+   CMake target properties or confirming it compiles on a machine without SDL2)
+6. SDL2 is fetched at version `release-2.30.9`; SDL2_mixer at `release-2.8.0`,
+   WAV support only (FLAC, MP3, OGG, OPUS, MIDI, MOD, WAVPACK all disabled)
+7. The `tests/` subdirectory is present and `cmake --build build` does not error
+   on it (GoogleTest not yet wired — stub only)
+
+**Legitimate waivers for INF-1:**
+- Unit tests: no testable logic exists (pure CMake + empty stubs) — waived
+- clang-tidy: not configured until INF-3 — waived
+- CI pipeline: not configured until INF-4 — waived
+
+---
+
+## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
 - Initials entry on high-score table
@@ -351,3 +380,4 @@ All scope questions resolved during M1 review.
 | NFR-4 Startup time | Outline |
 | NFR-5 Controller hot-plug | Outline |
 | NFR-6 Audio | Outline — included in v1.0, assets TBD |
+| IR-1 CMake skeleton | **Final** |

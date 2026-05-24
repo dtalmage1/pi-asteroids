@@ -278,7 +278,7 @@ merged to `master`.
 | Document | Status |
 |----------|--------|
 | `docs/plan.md` | **M3 final** — 42-item backlog, 8 vertical slices, dependencies explicit |
-| Backlog progress | **INF-1** blocked — cmake not installed on host; build unverified. Acceptance criteria not formally written. Not Done. |
+| Backlog progress | **INF-1** ✓ Done — build verified on host (MSVC, Windows). **INF-2** next. |
 | `docs/architecture.md` | **M2 final** — all open questions resolved |
 | `docs/requirements.md` | **M1 outline complete** — scope decisions confirmed, parameters TBD at feature selection |
 | `docs/release.md` | Not started (MR) |

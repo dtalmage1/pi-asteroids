@@ -73,7 +73,18 @@ add_library(lib_audio STATIC
     src/audio/Sdl2AudioSink.cpp
 )
 target_include_directories(lib_audio PUBLIC src)
-target_link_libraries(lib_audio PRIVATE SDL2_mixer::SDL2_mixer)
+# Target name differs between static and shared builds of SDL2_mixer.
+# Probe for the correct target rather than hard-coding one name.
+foreach(_t SDL2_mixer::SDL2_mixer-static SDL2_mixer::SDL2_mixer SDL2_mixer)
+    if(TARGET ${_t})
+        set(SDL2MIXER_TARGET ${_t})
+        break()
+    endif()
+endforeach()
+if(NOT SDL2MIXER_TARGET)
+    message(FATAL_ERROR "Could not find a linkable SDL2_mixer target")
+endif()
+target_link_libraries(lib_audio PRIVATE ${SDL2MIXER_TARGET})
 
 # ── Executable ────────────────────────────────────────────────────────────────
 add_executable(asteroids src/main.cpp)
