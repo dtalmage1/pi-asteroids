@@ -1,0 +1,2 @@
+namespace ast {
+} // namespace ast

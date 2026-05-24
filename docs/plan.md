@@ -263,6 +263,7 @@ A backlog item is **Done** when all of the following are true:
 | Document | Status |
 |----------|--------|
 | `docs/plan.md` | **M3 final** — 42-item backlog, 8 vertical slices, dependencies explicit |
+| Backlog progress | **INF-1** done (pending first build verification); INF-2 next |
 | `docs/architecture.md` | **M2 final** — all open questions resolved |
 | `docs/requirements.md` | **M1 outline complete** — scope decisions confirmed, parameters TBD at feature selection |
 | `docs/release.md` | Not started (MR) |
