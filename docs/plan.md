@@ -91,91 +91,112 @@ left open. Ready to derive a feature backlog from this document.
 
 ---
 
-## M3 — Feature Backlog
+## M3 — Feature Backlog (Final)
 
-**Goal:** Decompose the architecture and requirements into an ordered, estimated backlog of
-implementable features. Each item is small enough to be completed in one iteration
-(one branch, one PR).
+**Goal:** Ordered, dependency-aware backlog of implementable features. Each item fits in
+one branch + one PR. Items are grouped into **vertical slices** — each slice produces
+something runnable and verifiable on real hardware.
 
-**Backlog (initial — to be refined after M2):**
+**WAV asset dependency:** AUD-2 and AUD-3 require sourced WAV files before they can be
+selected. Identify and commit assets before those items reach the top of the queue.
 
-### Infrastructure
-| ID | Feature | Notes |
-|----|---------|-------|
-| INF-1 | CMakeLists.txt: project skeleton, SDL2 via FetchContent | Host build only |
-| INF-2 | GoogleTest + GoogleMock integration | `ctest` target |
-| INF-3 | clang-tidy configuration (`.clang-tidy`) | Enforced in CI |
-| INF-4 | GitHub Actions CI (build + lint + unit tests) | Ubuntu runner |
-| INF-5 | Deploy & integration-test scripts | `scripts/deploy.sh` |
-| INF-6 | RPi self-hosted runner or manual integration-test workflow | |
+---
 
-### Core Interfaces & Stubs
-| ID | Feature | Notes |
-|----|---------|-------|
-| CORE-1 | `IRenderer` abstract interface + SDL2 implementation stub | No drawing yet |
-| CORE-2 | `IInputSource` abstract interface + SDL2/joystick implementation | Button mapping |
-| CORE-3 | Main game loop skeleton (fixed timestep, quit event) | Renders blank window |
-| CORE-4 | `GameState` enum and state machine scaffold | No transitions yet |
+### Slice 1 — Toolchain: build, test, lint, CI
 
-### Game Entities
-| ID | Feature | Notes |
-|----|---------|-------|
-| ENT-1 | `Ship` — position, orientation, wrapping | Physics only, no render |
-| ENT-2 | `Ship` — thrust & rotation from input | Newtonian, drag |
-| ENT-3 | `Asteroid` — position, velocity, size, wrapping | Three sizes |
-| ENT-4 | `Projectile` — fire, travel, lifetime expiry | From ship nose |
-| ENT-5 | Collision detection — projectile vs. asteroid | AABB or circle |
-| ENT-6 | Asteroid splitting on hit | Spawn two smaller; destroy smallest |
-| ENT-7 | Ship–asteroid collision | Lose a life |
+| # | ID | Feature | Depends on | Notes |
+|---|----|---------|------------|-------|
+| 1 | INF-1 | CMake skeleton: top-level `CMakeLists.txt`, `src/` and `tests/` targets, SDL2 + SDL2_mixer via FetchContent, `audio/` module stub | — | Host build; binary exits immediately |
+| 2 | INF-2 | GoogleTest + GoogleMock via FetchContent; `ctest` target; one placeholder passing test | INF-1 | Verifies test harness wires up |
+| 3 | INF-3 | `.clang-tidy` config; CMake `clang-tidy` integration; zero warnings on empty project | INF-1 | Enforced on all subsequent PRs |
+| 4 | INF-4 | GitHub Actions CI: build + lint + unit tests on Ubuntu runner | INF-1..3 | Green CI gate required before any merge |
+| 5 | INF-5 | `scripts/deploy.sh` (rsync to RPi) + `scripts/run_integration_tests.sh` | INF-1 | Manual workflow; RPi runner (INF-6) is post-v1.0 optional |
 
-### Rendering
-| ID | Feature | Notes |
-|----|---------|-------|
-| RND-1 | Vector-style line renderer (SDL2 `DrawLine` wrapper) | Colour, thickness |
-| RND-2 | Ship wireframe rendering | Rotated polygon |
-| RND-3 | Asteroid wireframe rendering | Irregular polygon per size |
-| RND-4 | Projectile rendering | Small dot / short line |
-| RND-5 | HUD — score, lives remaining | Bitmap or line font |
-| RND-6 | Explosion / particle effect | Short-lived line segments |
+---
 
-### Game Logic
-| ID | Feature | Notes |
-|----|---------|-------|
-| GAME-1 | Scoring rules (per asteroid size) | Matches arcade |
-| GAME-2 | Wave spawning — asteroid count per wave | Classic progression |
-| GAME-3 | Lives system and respawn logic | Invincibility period |
-| GAME-4 | Game-over state | Transition to attract |
-| GAME-5 | Attract mode / title screen | Auto-play or static |
-| GAME-6 | High-score table (session, non-persistent) | Top 5 |
-| GAME-7 | Hyperspace (emergency warp) | Random reposition |
+### Slice 2 — Core foundation: blank window on screen
 
-### Saucer
-| ID | Feature | Notes |
-|----|---------|-------|
-| SAU-1 | `Saucer` entity — movement, wrap/exit, spawn timer | No firing yet |
-| SAU-2 | Large saucer — random-direction fire, player projectile vs saucer collision | |
-| SAU-3 | Small saucer — aimed fire (accuracy spread), ship vs saucer collision | |
-| SAU-4 | Saucer rendering — wireframe polygon, engine audio loop | |
+| # | ID | Feature | Depends on | Notes |
+|---|----|---------|------------|-------|
+| 6 | CORE-1 | Foundation types: `Vec2`, `Colour`, `SoundId` enum; `IRenderer` pure interface; `Sdl2Renderer` stub (clear + present, no drawing); `MockRenderer` (GoogleMock) | INF-1..4 | `lib: game` gets no SDL2 dep; all types live in `game/` |
+| 7 | CORE-2 | `IInputSource` pure interface; `InputState` struct; `Sdl2InputSource` with hardcoded PiHut SNES button map; `MockInputSource` | CORE-1 | Button map constants; `connected` flag always true for now |
+| 8 | CORE-3 | `IAudioSink` pure interface; `NullAudioSink` (no-op); `MockAudioSink` (GoogleMock); `Sdl2AudioSink` stub (init only, no playback yet) | CORE-1 | SDL2_mixer init failure → substitute `NullAudioSink` silently |
+| 9 | CORE-4 | `Platform` RAII (SDL2 init/quit, window creation); `main.cpp` game loop: 60 Hz fixed timestep, SDL event poll, quit handling; renders blank window | CORE-1..3 | dt capped at 50 ms; `Sdl2Renderer::clear` + `present` called each tick |
+| 10 | CORE-5 | `Game` class; `GameState` enum (`Attract`, `Playing`, `PlayerDead`, `GameOver`); state machine scaffold; `Game::update()` + `Game::render()` stubs | CORE-4 | Starts in `Attract`; no transitions yet |
 
-### Audio
-| ID | Feature | Notes |
-|----|---------|-------|
-| AUD-1 | `IAudioSink` interface + `Sdl2AudioSink` implementation + `NullAudioSink` fallback | SDL2_mixer |
-| AUD-2 | Thrust, fire, explosion sound effects | WAV assets needed |
-| AUD-3 | Saucer engine loop + saucer fire SFX | WAV assets needed |
-| AUD-4 | Background beat (two tones, tempo scales with asteroid count) | Classic mechanic |
+---
 
-### Polish & Hardening
-| ID | Feature | Notes |
-|----|---------|-------|
-| POL-1 | Controller hot-plug (connect/disconnect gracefully) | Runtime detection |
-| POL-2 | Graceful SDL2 init failure handling | Error message + exit |
-| POL-3 | Configurable resolution / fullscreen toggle | Command-line flag |
-| POL-4 | Frame-rate cap / VSync option | Prevent CPU thrash on RPi |
+### Slice 3 — Moving ship visible on screen
 
-**Backlog ordering:** INF → CORE → ENT (physics before render) → RND → GAME → SAU → AUD → POL.
-Saucer and audio are confirmed in v1.0 scope; audio assets (WAV files) must be sourced
-before AUD-2 is selected.
+| # | ID | Feature | Depends on | Notes |
+|---|----|---------|------------|-------|
+| 11 | ENT-1 | `Physics.hpp` free functions (integrate, drag, thrust, wrapPosition, wrapAngle); `Collision.hpp` circle-circle helper; `Ship` struct (position, velocity, angle, invincTimer, thrusting, active); ship update (no input — drifts) | CORE-5 | `lib: game` only; fully unit-testable |
+| 12 | RND-1 | `Sdl2Renderer::drawLine` + `drawLineStrip` implemented (was stub); `Sdl2Renderer::screenSize()`; colour support | ENT-1 | First real pixels on screen |
+| 13 | RND-2 | Ship wireframe rendered each frame (chevron polygon, rotated by `Ship::angle`) | ENT-1, RND-1 | Visible ship on screen |
+| 14 | ENT-2 | Ship thrust, rotation, drag from `InputState`; `Attract→Playing` transition on START; ship steers and wraps | RND-2, CORE-2 | First interactive moment |
+
+---
+
+### Slice 4 — Shooting asteroids
+
+| # | ID | Feature | Depends on | Notes |
+|---|----|---------|------------|-------|
+| 15 | ENT-3 | `Asteroid` struct (position, velocity, angle, angularVel, size, shape polygon); random shape generation (seeded RNG); movement + wrap; three sizes | ENT-2 | Shape generated once at spawn; stored in struct |
+| 16 | RND-3 | Asteroid wireframe rendered (stored shape polygon, rotated each frame) | ENT-3, RND-1 | Asteroids visible |
+| 17 | ENT-4 | `Projectile` struct (position, velocity, lifetime, `ProjectileOwner`); fire from ship nose; movement + wrap; lifetime expiry; max 4 in-flight cap | ENT-3 | Player projectiles only (`ProjectileOwner::Player`) |
+| 18 | RND-4 | Projectile rendered (short bright line segment) | ENT-4, RND-1 | Shots visible |
+| 19 | ENT-5 | Collision: player `Projectile` vs `Asteroid` (circle-circle); destroy both on hit | ENT-4 | No scoring or splitting yet |
+| 20 | ENT-6 | Asteroid splitting on hit: Large→2 Medium, Medium→2 Small, Small→nothing; child velocities diverge from parent | ENT-5 | Core gameplay mechanic |
+
+---
+
+### Slice 5 — It's a game
+
+| # | ID | Feature | Depends on | Notes |
+|---|----|---------|------------|-------|
+| 21 | ENT-7 | Ship–asteroid collision (circle-circle, ship not invincible); triggers `SHIP_DESTROYED` event in state machine | ENT-6 | Leads into lives system |
+| 22 | RND-6 | `Particle` struct (position, velocity, lifetime, maxLifetime); explosion spawns particles on asteroid/ship destroy; particle rendering (short fading line segments) | ENT-7, RND-1 | Visual feedback for destruction |
+| 23 | GAME-1 | Scoring: 20/50/100 pts per Large/Medium/Small asteroid; score tracked in `Game`; saucer scoring reserved for SAU-2/3 | ENT-6 | Score incremented in collision handler |
+| 24 | GAME-2 | `Wave` class: spawn N large asteroids clear of ship; wave-clear detection; inter-wave delay; asteroid count progression to maximum | GAME-1 | `Playing` state stays active across waves |
+| 25 | GAME-3 | Lives system (3 lives, decrement on `SHIP_DESTROYED`); respawn at centre after delay; `invincTimer` invincibility period; ship flashes while invincible; `PlayerDead` state | ENT-7, GAME-2 | Extra life at 10k pts also implemented here |
+| 26 | RND-5 | HUD: line-drawn 7-segment-style score digits; ship-icon lives indicator | GAME-3, RND-1 | No SDL2_ttf; digits via `drawLine` |
+| 27 | GAME-4 | `GameOver` state: display "GAME OVER", final score; transition to `Attract` on delay or START | GAME-3 | |
+| 28 | GAME-5 | `Attract` state: title text, "PRESS START" prompt rendered via line-drawn digits/letters; static screen | GAME-4, RND-5 | No auto-play demo |
+| 29 | GAME-6 | `ScoreTable`: top-5 session scores; updated on game over; displayed on `Attract` screen | GAME-5 | No persistence; resets on process restart |
+| 30 | GAME-7 | Hyperspace: ship warps to random position; risk — random chance of instant destruction on arrival | GAME-3 | Classic risk mechanic; probability finalised at selection |
+
+---
+
+### Slice 6 — Saucer
+
+| # | ID | Feature | Depends on | Notes |
+|---|----|---------|------------|-------|
+| 31 | SAU-1 | `Saucer` entity (position, velocity, size, fireTimer, active); spawn timer in `Game`; enters from random edge, traverses screen, exits; no firing, no render yet | GAME-2 | At most one saucer at a time; `active` flag |
+| 32 | SAU-4 | Saucer wireframe rendering (ellipse approximation or polygon); visible on screen | SAU-1, RND-1 | Render added immediately so saucer is visible |
+| 33 | SAU-2 | Large saucer: random-direction fire; `Projectile` with `ProjectileOwner::Saucer`; player-projectile vs saucer collision; saucer scoring (200 pts) | SAU-4 | Saucer fire does not destroy asteroids |
+| 34 | SAU-3 | Small saucer: aimed fire with accuracy spread (decreasing in later waves); ship vs saucer projectile collision; ship vs saucer body collision; scoring (1000 pts) | SAU-2 | Parameters (spread, fire rate) finalised at selection |
+
+---
+
+### Slice 7 — Audio
+
+| # | ID | Feature | Depends on | Notes |
+|---|----|---------|------------|-------|
+| 35 | AUD-1 | `Sdl2AudioSink` fully implemented: SDL2_mixer init, load WAV assets, `play`/`loop`/`stop`/`isPlaying`; channel management; `NullAudioSink` substituted on failure | CORE-3 | **Blocked until WAV assets are sourced and committed** |
+| 36 | AUD-2 | Wire game events to audio cues: thrust loop (start/stop), fire click, small/large explosion; dispatched in `Game::update()` | AUD-1, GAME-3 | |
+| 37 | AUD-3 | Saucer engine loop (start on spawn, stop on destroy/exit); saucer fire SFX | AUD-2, SAU-3 | |
+| 38 | AUD-4 | Background beat: two alternating tones (`BeatLow`/`BeatHigh`); tempo (interval) inversely proportional to remaining asteroid count | AUD-3, GAME-2 | Classic tension mechanic |
+
+---
+
+### Slice 8 — Polish & hardening
+
+| # | ID | Feature | Depends on | Notes |
+|---|----|---------|------------|-------|
+| 39 | POL-1 | Controller hot-plug: `SDL_JOYDEVICEADDED/REMOVED` handling in `Sdl2InputSource`; `connected` flag; game pauses input (ship coasts) while disconnected | CORE-2 | Can be pulled forward to CORE-2 if desired |
+| 40 | POL-2 | Graceful SDL2 / SDL2_mixer init failure: error message to stderr, clean exit; `NullAudioSink` already covers audio failure | CORE-4, AUD-1 | |
+| 41 | POL-3 | Command-line `--width` / `--height` / `--fullscreen` flags; all entity sizes scale to screen dimensions | CORE-4 | Architecture already requires scale-relative coordinates |
+| 42 | POL-4 | Frame-rate monitoring: log average FPS to stderr in debug builds; vsync option via SDL `SDL_RENDERER_PRESENTVSYNC` flag | CORE-4 | Prevents CPU thrash on RPi |
 
 ---
 
@@ -228,7 +249,7 @@ A backlog item is **Done** when all of the following are true:
 
 ## MR — Release v1.0
 
-1. All backlog items through GAME-6 Done and merged to `main`
+1. All backlog items INF-1 through POL-4 (items 1–42) Done and merged to `main`
 2. Integration tests passing on physical RPi 400 with PiHut controller
 3. Version set: `constexpr int VERSION_MAJOR = 1, VERSION_MINOR = 0, VERSION_PATCH = 0`
 4. `CHANGELOG.md` written (one entry per merged PR, auto-assembled from PR titles)
@@ -241,7 +262,7 @@ A backlog item is **Done** when all of the following are true:
 
 | Document | Status |
 |----------|--------|
-| `docs/plan.md` | **Done** (this file) |
+| `docs/plan.md` | **M3 final** — 42-item backlog, 8 vertical slices, dependencies explicit |
 | `docs/architecture.md` | **M2 final** — all open questions resolved |
 | `docs/requirements.md` | **M1 outline complete** — scope decisions confirmed, parameters TBD at feature selection |
 | `docs/release.md` | Not started (MR) |
