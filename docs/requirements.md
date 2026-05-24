@@ -342,6 +342,9 @@ recorded here rather than in PR descriptions so they are traceable.
 - Unit tests: no testable logic exists (pure CMake + empty stubs) — waived
 - clang-tidy: not configured until INF-3 — waived
 - CI pipeline: not configured until INF-4 — waived
+- RPi build verification: DoD required both targets from INF-2 onwards; INF-1 was
+  verified on host only (MSVC/Windows). RPi build verified implicitly when INF-2
+  passes criterion 2.
 
 ---
 
@@ -349,14 +352,16 @@ recorded here rather than in PR descriptions so they are traceable.
 
 **Acceptance criteria — all must pass before INF-2 is Done:**
 
-1. `cmake -B build && cmake --build build` completes with exit code 0 (no regression
-   from INF-1)
-2. GoogleTest and GoogleMock are fetched via FetchContent at a pinned version tag
+1. `cmake -B build && cmake --build build` completes with exit code 0 on the host
+   (MSVC/Windows) — no regression from INF-1
+2. `cmake -B build && cmake --build build` completes with exit code 0 on the RPi
+   (GCC/ARM64, Raspberry Pi OS Bookworm)
+3. GoogleTest and GoogleMock are fetched via FetchContent at a pinned version tag
    (`v1.14.0`)
-3. A `unit_tests` executable is defined; it links `gtest_main`, `gmock`, and `lib_game`
-4. `ctest -N` lists at least one test
-5. `ctest --output-on-failure` exits 0 with all tests passing
-6. `lib_game` retains no SDL2 or SDL2_mixer link dependency (INF-1 not regressed)
+4. A `unit_tests` executable is defined; it links `gtest_main`, `gmock`, and `lib_game`
+5. `ctest -N` lists at least one test (verified on both targets)
+6. `ctest --output-on-failure` exits 0 with all tests passing (verified on both targets)
+7. `lib_game` retains no SDL2 or SDL2_mixer link dependency (INF-1 not regressed)
 
 **Legitimate waivers for INF-2:**
 - clang-tidy: not configured until INF-3 — waived

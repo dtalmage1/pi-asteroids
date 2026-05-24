@@ -232,8 +232,9 @@ merged to `master`.
 
 **Code**
 - [ ] Every acceptance criterion has been manually verified to pass
-- [ ] The feature builds without errors on at least one target (host or RPi). For
+- [ ] The feature builds without errors on **both** targets (host and RPi). For
   build-system items, `cmake -B build && cmake --build build` must complete cleanly
+  on each. RPi build is verified via `rsync` + `ssh dan@dtdan`.
 - [ ] All new logic has corresponding unit tests (GoogleTest); coverage ≥ 80%
   — *legitimately waived only for items with no testable logic (e.g. pure CMake
   changes); waiver must be stated explicitly in the PR description*

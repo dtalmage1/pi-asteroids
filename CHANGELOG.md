@@ -11,7 +11,8 @@ Format: one entry per merged PR, newest first.
 - INF-2: GoogleTest (v1.14.0) and GoogleMock via FetchContent; `unit_tests` executable
   linked against `gtest_main`, `gmock`, and `lib_game`; one placeholder passing test
   (`Placeholder.AlwaysPasses`); `gtest_discover_tests` wires tests into `ctest`.
-  Verified: `ctest --output-on-failure` passes 1/1 on MSVC/Windows host.
+  Verified: `ctest --output-on-failure` passes 1/1 on MSVC/Windows host; full build
+  verified on RPi 400 (GCC/ARM64, Raspberry Pi OS Bookworm).
 - INF-1: CMake project skeleton — SDL2 (release-2.30.9) and SDL2_mixer (release-2.8.0,
   WAV only) via FetchContent, both static; five library targets (`lib_game` with no SDL2
   dep, `lib_platform`, `lib_rendering`, `lib_input`, `lib_audio`); `asteroids`
