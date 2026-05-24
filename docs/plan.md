@@ -278,7 +278,7 @@ merged to `master`.
 | Document | Status |
 |----------|--------|
 | `docs/plan.md` | **M3 final** — 42-item backlog, 8 vertical slices, dependencies explicit |
-| Backlog progress | **INF-1** ✓ Done — build verified on host (MSVC, Windows). **INF-2** next. |
+| Backlog progress | **INF-1** ✓ Done. **INF-2** ✓ Done — GoogleTest v1.14.0 + GoogleMock via FetchContent; ctest 1/1 passing on host (MSVC, Windows). **INF-3** next. |
 | `docs/architecture.md` | **M2 final** — all open questions resolved |
 | `docs/requirements.md` | **M1 outline complete** — scope decisions confirmed, parameters TBD at feature selection |
 | `docs/release.md` | Not started (MR) |

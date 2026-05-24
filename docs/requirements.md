@@ -345,6 +345,25 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-2 GoogleTest + GoogleMock Harness **[FINAL]**
+
+**Acceptance criteria — all must pass before INF-2 is Done:**
+
+1. `cmake -B build && cmake --build build` completes with exit code 0 (no regression
+   from INF-1)
+2. GoogleTest and GoogleMock are fetched via FetchContent at a pinned version tag
+   (`v1.14.0`)
+3. A `unit_tests` executable is defined; it links `gtest_main`, `gmock`, and `lib_game`
+4. `ctest -N` lists at least one test
+5. `ctest --output-on-failure` exits 0 with all tests passing
+6. `lib_game` retains no SDL2 or SDL2_mixer link dependency (INF-1 not regressed)
+
+**Legitimate waivers for INF-2:**
+- clang-tidy: not configured until INF-3 — waived
+- CI pipeline: not configured until INF-4 — waived
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -381,3 +400,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | NFR-5 Controller hot-plug | Outline |
 | NFR-6 Audio | Outline — included in v1.0, assets TBD |
 | IR-1 CMake skeleton | **Final** |
+| IR-2 GoogleTest harness | **Final** |
