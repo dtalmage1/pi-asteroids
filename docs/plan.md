@@ -149,12 +149,21 @@ implementable features. Each item is small enough to be completed in one iterati
 | GAME-6 | High-score table (session, non-persistent) | Top 5 |
 | GAME-7 | Hyperspace (emergency warp) | Random reposition |
 
-### Audio (optional for v1.0)
+### Saucer
 | ID | Feature | Notes |
 |----|---------|-------|
-| AUD-1 | `IAudioSink` abstract interface + SDL2_mixer stub | Gated on NFR |
-| AUD-2 | Thrust, fire, explosion sound effects | WAV assets |
-| AUD-3 | Background beat (tempo scales with asteroid count) | Classic mechanic |
+| SAU-1 | `Saucer` entity — movement, wrap/exit, spawn timer | No firing yet |
+| SAU-2 | Large saucer — random-direction fire, player projectile vs saucer collision | |
+| SAU-3 | Small saucer — aimed fire (accuracy spread), ship vs saucer collision | |
+| SAU-4 | Saucer rendering — wireframe polygon, engine audio loop | |
+
+### Audio
+| ID | Feature | Notes |
+|----|---------|-------|
+| AUD-1 | `IAudioSink` interface + `Sdl2AudioSink` implementation + `NullAudioSink` fallback | SDL2_mixer |
+| AUD-2 | Thrust, fire, explosion sound effects | WAV assets needed |
+| AUD-3 | Saucer engine loop + saucer fire SFX | WAV assets needed |
+| AUD-4 | Background beat (two tones, tempo scales with asteroid count) | Classic mechanic |
 
 ### Polish & Hardening
 | ID | Feature | Notes |
@@ -164,8 +173,9 @@ implementable features. Each item is small enough to be completed in one iterati
 | POL-3 | Configurable resolution / fullscreen toggle | Command-line flag |
 | POL-4 | Frame-rate cap / VSync option | Prevent CPU thrash on RPi |
 
-**Backlog ordering:** INF → CORE → ENT (physics before render) → RND → GAME → AUD → POL.
-Audio items are deferred to post-v1.0 if they slip.
+**Backlog ordering:** INF → CORE → ENT (physics before render) → RND → GAME → SAU → AUD → POL.
+Saucer and audio are confirmed in v1.0 scope; audio assets (WAV files) must be sourced
+before AUD-2 is selected.
 
 ---
 
@@ -232,6 +242,6 @@ A backlog item is **Done** when all of the following are true:
 | Document | Status |
 |----------|--------|
 | `docs/plan.md` | **Done** (this file) |
-| `docs/architecture.md` | **M0 outline complete** — 7 open questions for M2 |
+| `docs/architecture.md` | **M2 final** — all open questions resolved |
 | `docs/requirements.md` | **M1 outline complete** — scope decisions confirmed, parameters TBD at feature selection |
 | `docs/release.md` | Not started (MR) |
