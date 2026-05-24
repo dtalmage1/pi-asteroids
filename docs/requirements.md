@@ -426,6 +426,43 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-6 Foundation Types and IRenderer Interface **[FINAL]**
+
+**Acceptance criteria — all must pass before CORE-1 is Done:**
+
+1. `src/game/Vec2.hpp` defines `struct Vec2` in namespace `ast`:
+   - Fields: `float x = 0.F`, `float y = 0.F`
+   - `operator+(Vec2) const` → component-wise addition
+   - `operator*(float) const` → scalar multiplication
+   - `length() const` → Euclidean magnitude
+   - `normalised() const` → unit vector; returns `{0,0}` when length is zero
+   - `static distance(Vec2, Vec2) → float` → Euclidean distance
+2. `src/game/Colour.hpp` defines `struct Colour` in namespace `ast`:
+   - Fields: `uint8_t r, g, b, a` (default `a = 255`)
+3. `src/game/SoundId.hpp` defines `enum class SoundId` in namespace `ast` with values:
+   `Thrust, Fire, ExplosionSmall, ExplosionLarge, SaucerEngine, SaucerFire, BeatLow, BeatHigh`
+4. `src/game/IRenderer.hpp` defines `class IRenderer` (pure interface) in namespace `ast`:
+   - `virtual void clear(Colour) = 0`
+   - `virtual void drawLine(Vec2, Vec2, Colour) = 0`
+   - `virtual void drawLineStrip(const std::vector<Vec2>&, Colour, bool closed) = 0`
+     (note: uses `std::vector` not `std::span` — C++17 compatibility)
+   - `virtual void present() = 0`
+   - `virtual Vec2 screenSize() const = 0`
+   - Non-copyable, non-movable (deleted copy/move operators)
+5. `src/rendering/Sdl2Renderer.hpp` / `.cpp` provide `class Sdl2Renderer : public IRenderer`:
+   - `clear()` and `present()` are functional (call SDL2 renderer)
+   - `drawLine()` and `drawLineStrip()` are no-op stubs (implemented in RND-1)
+   - `screenSize()` queries SDL for the actual render output size
+   - SDL_Renderer owned via `std::unique_ptr` with custom deleter (RAII)
+   - `lib_game` retains no SDL2 dependency
+6. `tests/unit/MockRenderer.hpp` provides `class MockRenderer : public IRenderer` using GoogleMock
+7. Unit tests pass for `Vec2` (all 6 methods) and for `MockRenderer` basic usage
+8. `cmake --build build` exits 0 on host (MSVC/Windows, Ninja) — zero clang-tidy findings
+9. `cmake --build build` exits 0 on RPi (GCC/ARM64, Makefile) — zero clang-tidy findings
+10. `ctest --output-on-failure` exits 0 on both host and RPi
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -466,3 +503,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | IR-3 Clang-tidy integration | **Final** |
 | IR-4 GitHub Actions CI | **Final** |
 | IR-5 Deploy and integration test scripts | **Final** |
+| IR-6 Foundation types and IRenderer interface | **Final** |
