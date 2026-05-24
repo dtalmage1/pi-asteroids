@@ -8,6 +8,10 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- INF-5: `scripts/deploy.sh` (rsync to `dan@dtdan`, excludes `.git/` and `build/`);
+  `scripts/run_integration_tests.sh` (SSH build + `ctest` on RPi). Both use
+  `set -euo pipefail`; exit non-zero on failure. Verified: build and ctest pass
+  on RPi 400 (GCC/ARM64). Waiver: RPi CI runner is post-v1.0 optional (INF-6).
 - INF-4: GitHub Actions CI workflow (`.github/workflows/ci.yml`); triggers on push
   and PR to `main`; single `ubuntu-latest` job: install system deps, configure with
   Ninja + GCC (`CMAKE_BUILD_TYPE=Debug`), build (clang-tidy inline), `ctest`.

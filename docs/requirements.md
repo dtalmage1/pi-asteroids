@@ -408,6 +408,24 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-5 Deploy and Integration Test Scripts **[FINAL]**
+
+**Acceptance criteria — all must pass before INF-5 is Done:**
+
+1. `scripts/deploy.sh` exists; rsyncs project to `dan@dtdan` excluding `.git/`
+   and `build/`; uses `set -euo pipefail`; works from any directory
+2. `scripts/run_integration_tests.sh` exists; SSHs to RPi, runs
+   `cmake --build build` then `ctest --output-on-failure`; exits non-zero on
+   any failure; uses `set -euo pipefail`
+3. Both scripts are executable (mode 755)
+4. `run_integration_tests.sh` verified: build exits 0 and ctest passes on RPi
+
+**Legitimate waivers for INF-5:**
+- CI automation of RPi tests: RPi runner in CI is post-v1.0 (INF-6 optional)
+- clang-tidy: passes (INF-3 done)
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -447,3 +465,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | IR-2 GoogleTest harness | **Final** |
 | IR-3 Clang-tidy integration | **Final** |
 | IR-4 GitHub Actions CI | **Final** |
+| IR-5 Deploy and integration test scripts | **Final** |

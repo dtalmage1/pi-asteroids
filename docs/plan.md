@@ -279,7 +279,7 @@ merged to `master`.
 | Document | Status |
 |----------|--------|
 | `docs/plan.md` | **M3 final** — 42-item backlog, 8 vertical slices, dependencies explicit |
-| Backlog progress | **INF-1** ✓ Done. **INF-2** ✓ Done. **INF-3** ✓ Done. **INF-4** ✓ Done — CI green on first push (github.com/dtalmage1/pi-asteroids). **INF-5** next. |
+| Backlog progress | **INF-1** ✓ Done. **INF-2** ✓ Done. **INF-3** ✓ Done. **INF-4** ✓ Done. **INF-5** ✓ Done — deploy + integration test scripts; RPi ctest verified. Slice 1 complete. **CORE-1** next. |
 | `docs/architecture.md` | **M2 final** — all open questions resolved |
 | `docs/requirements.md` | **M1 outline complete** — scope decisions confirmed, parameters TBD at feature selection |
 | `docs/release.md` | Not started (MR) |
