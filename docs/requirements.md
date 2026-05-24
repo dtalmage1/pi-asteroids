@@ -391,6 +391,23 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-4 GitHub Actions CI Pipeline **[FINAL]**
+
+**Acceptance criteria — all must pass before INF-4 is Done:**
+
+1. `.github/workflows/ci.yml` exists and triggers on push and PR to `main`
+2. Single job on `ubuntu-latest`: install system deps → configure (Ninja + GCC,
+   `CMAKE_BUILD_TYPE=Debug`) → build (clang-tidy runs inline via `CXX_CLANG_TIDY`)
+   → `ctest --output-on-failure`
+3. SDL2 and SDL2_mixer are fetched via FetchContent; no preinstalled SDL2 required
+4. All stages pass with green status on push to `main`
+5. CI DoD waiver (held since INF-1) is lifted; no merges to `main` without green CI
+
+**Legitimate waivers for INF-4:**
+- None
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -429,3 +446,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | IR-1 CMake skeleton | **Final** |
 | IR-2 GoogleTest harness | **Final** |
 | IR-3 Clang-tidy integration | **Final** |
+| IR-4 GitHub Actions CI | **Final** |

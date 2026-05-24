@@ -8,6 +8,11 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- INF-4: GitHub Actions CI workflow (`.github/workflows/ci.yml`); triggers on push
+  and PR to `main`; single `ubuntu-latest` job: install system deps, configure with
+  Ninja + GCC (`CMAKE_BUILD_TYPE=Debug`), build (clang-tidy inline), `ctest`.
+  SDL2 and SDL2_mixer via FetchContent — no preinstalled SDL2 required. CI DoD
+  waiver lifted; all subsequent PRs require green CI before merge.
 - INF-3: `.clang-tidy` with `bugprone-*`, `clang-analyzer-*`, `cppcoreguidelines-*`,
   `modernize-*`, `performance-*`, `readability-*` checks; `WarningsAsErrors: '*'`;
   header filter excludes `_deps/`. CMake wires `CXX_CLANG_TIDY` on project targets
