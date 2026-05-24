@@ -8,6 +8,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Build all FetchContent dependencies as static libraries.
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 
+# Export compile_commands.json for clangd / IDE integration (Ninja/Makefile only).
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include(FetchContent)
 
 # ── SDL2 ──────────────────────────────────────────────────────────────────────
@@ -95,6 +98,23 @@ target_link_libraries(asteroids PRIVATE
     lib_input
     lib_audio
 )
+
+# ── clang-tidy (applied to project targets only, not FetchContent deps) ───────
+file(GLOB _CT_HINTS
+    "C:/Program Files/Microsoft Visual Studio/*/*/VC/Tools/Llvm/x64/bin"
+    "C:/Program Files/LLVM/bin"
+)
+find_program(CLANG_TIDY_EXE NAMES clang-tidy HINTS ${_CT_HINTS})
+if(CLANG_TIDY_EXE)
+    message(STATUS "clang-tidy: ${CLANG_TIDY_EXE}")
+    set(_CT_CMD "${CLANG_TIDY_EXE}")
+    set_target_properties(
+        lib_game lib_platform lib_rendering lib_input lib_audio asteroids
+        PROPERTIES CXX_CLANG_TIDY "${_CT_CMD}"
+    )
+else()
+    message(WARNING "clang-tidy not found — static analysis disabled")
+endif()
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 enable_testing()

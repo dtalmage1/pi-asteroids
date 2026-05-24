@@ -369,6 +369,28 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-3 Clang-tidy Integration **[FINAL]**
+
+**Acceptance criteria — all must pass before INF-3 is Done:**
+
+1. `.clang-tidy` exists at project root with an agreed check set:
+   `bugprone-*`, `clang-analyzer-*`, `cppcoreguidelines-*`, `modernize-*`,
+   `performance-*`, `readability-*`; selected noisy checks disabled;
+   `WarningsAsErrors: '*'`; `HeaderFilterRegex` excludes `_deps/` headers
+2. clang-tidy wired into CMake via `CXX_CLANG_TIDY` on project targets only
+   (not FetchContent deps); `CMAKE_EXPORT_COMPILE_COMMANDS ON` for IDE support
+3. `cmake --build build` exits 0 on host (MSVC/Windows, Ninja generator) —
+   zero clang-tidy findings on all project sources
+4. `cmake --build build` exits 0 on RPi (GCC/ARM64, Makefile generator) —
+   zero clang-tidy findings on all project sources
+5. Clang-tidy DoD waiver (held since INF-1) is lifted; all subsequent items
+   must maintain zero clang-tidy findings
+
+**Legitimate waivers for INF-3:**
+- CI pipeline: not configured until INF-4 — waived
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -406,3 +428,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | NFR-6 Audio | Outline — included in v1.0, assets TBD |
 | IR-1 CMake skeleton | **Final** |
 | IR-2 GoogleTest harness | **Final** |
+| IR-3 Clang-tidy integration | **Final** |

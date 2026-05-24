@@ -14,7 +14,8 @@
       "PowerShell(ctest *)",
       "PowerShell(git *)",
       "PowerShell(rsync *)",
-      "PowerShell(ssh *)"
+      "PowerShell(ssh *)",
+      "PowerShell(cmd *)"
     ]
   }
 }

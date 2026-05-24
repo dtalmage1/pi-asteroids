@@ -66,6 +66,27 @@ so Claude Code does not prompt for each invocation.
 
 ## Workflow
 
+### Configure (host — Windows, one-time per build tree)
+
+Requires the MSVC environment. Run from a **VS 2022 Developer PowerShell**, or
+activate `vcvars64.bat` manually before calling cmake:
+
+```powershell
+$vcvars = "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+$ninja  = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe"
+cmd /c "`"$vcvars`" >nul 2>&1 && cmake -G Ninja -DCMAKE_MAKE_PROGRAM=`"$ninja`" -B build ."
+```
+
+### Build (host)
+
+```powershell
+$vcvars = "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+cmd /c "`"$vcvars`" >nul 2>&1 && cmake --build build"
+```
+
+Clang-tidy runs automatically on project sources during the build (Ninja generator).
+`compile_commands.json` is written to `build/` for clangd / VS Code integration.
+
 ### Deploy to RPi
 ```bash
 rsync -avz --exclude='.git' ./ dan@dtdan:~/Documents/Projects/Asteroids/
@@ -82,8 +103,9 @@ ssh dan@dtdan "cd ~/Documents/Projects/Asteroids/build && ./asteroids"
 ```
 
 ### Run Tests (host, mocked hardware)
-```bash
-cmake -B build && cmake --build build --target tests && ctest --output-on-failure
+```powershell
+$vcvars = "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+cmd /c "`"$vcvars`" >nul 2>&1 && cmake --build build && ctest --test-dir build --output-on-failure"
 ```
 
 ### Run Tests (RPi, real hardware)

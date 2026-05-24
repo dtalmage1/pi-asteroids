@@ -20,3 +20,7 @@ target_link_libraries(unit_tests PRIVATE
 
 include(GoogleTest)
 gtest_discover_tests(unit_tests)
+
+if(CLANG_TIDY_EXE)
+    set_target_properties(unit_tests PROPERTIES CXX_CLANG_TIDY "${_CT_CMD}")
+endif()

@@ -8,6 +8,12 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- INF-3: `.clang-tidy` with `bugprone-*`, `clang-analyzer-*`, `cppcoreguidelines-*`,
+  `modernize-*`, `performance-*`, `readability-*` checks; `WarningsAsErrors: '*'`;
+  header filter excludes `_deps/`. CMake wires `CXX_CLANG_TIDY` on project targets
+  via Ninja generator (Windows) and Makefile generator (RPi); `CMAKE_EXPORT_COMPILE_COMMANDS`
+  enabled for clangd/IDE integration. Verified: zero findings on host (MSVC/Ninja,
+  clang-tidy 17.0.3) and RPi (GCC/Makefile, clang-tidy 19.1.7).
 - INF-2: GoogleTest (v1.14.0) and GoogleMock via FetchContent; `unit_tests` executable
   linked against `gtest_main`, `gmock`, and `lib_game`; one placeholder passing test
   (`Placeholder.AlwaysPasses`); `gtest_discover_tests` wires tests into `ctest`.

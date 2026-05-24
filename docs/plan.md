@@ -279,7 +279,7 @@ merged to `master`.
 | Document | Status |
 |----------|--------|
 | `docs/plan.md` | **M3 final** — 42-item backlog, 8 vertical slices, dependencies explicit |
-| Backlog progress | **INF-1** ✓ Done. **INF-2** ✓ Done — GoogleTest v1.14.0 + GoogleMock via FetchContent; ctest 1/1 passing on host (MSVC, Windows). **INF-3** next. |
+| Backlog progress | **INF-1** ✓ Done. **INF-2** ✓ Done. **INF-3** ✓ Done — `.clang-tidy` with C++17 check set; Ninja generator on Windows (Makefile on RPi); `CXX_CLANG_TIDY` on project targets; zero findings on both targets. **INF-4** next. |
 | `docs/architecture.md` | **M2 final** — all open questions resolved |
 | `docs/requirements.md` | **M1 outline complete** — scope decisions confirmed, parameters TBD at feature selection |
 | `docs/release.md` | Not started (MR) |

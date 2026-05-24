@@ -1,0 +1,20 @@
+---
+Checks: >
+  bugprone-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
+  -modernize-use-trailing-return-type,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -readability-identifier-length
+
+WarningsAsErrors: '*'
+
+# Only report diagnostics originating in our own headers, not in SDL2 / GoogleTest.
+HeaderFilterRegex: '^(?!.*_deps).*$'
