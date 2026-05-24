@@ -18,6 +18,15 @@ In the course of this development the following good coding practices will be fo
 
 ---
 
+## Claude Code Settings
+
+`.claude/settings.json` contains the permission allowlist for development commands used in
+this project: `cmake`, `ctest`, `git`, `rsync`, `ssh` (including `ssh dan@dtdan`), and the
+full Windows path to cmake (`C:\Program Files\CMake\bin\cmake.exe`). These are pre-approved
+so Claude Code does not prompt for each invocation.
+
+---
+
 ## Development Environment
 
 ### Host (Development Machine)

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmake *)",
+      "Bash(& \"C:\\Program Files\\CMake\\bin\\cmake.exe\" *)",
+      "Bash(ctest *)",
+      "Bash(git *)",
+      "Bash(rsync *)",
+      "Bash(ssh *)",
+      "Bash(ssh dan@dtdan *)",
+      "PowerShell(cmake *)",
+      "PowerShell(& \"C:\\Program Files\\CMake\\bin\\cmake.exe\" *)",
+      "PowerShell(ctest *)",
+      "PowerShell(git *)",
+      "PowerShell(rsync *)",
+      "PowerShell(ssh *)"
+    ]
+  }
+}
