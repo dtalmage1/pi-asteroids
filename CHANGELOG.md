@@ -8,6 +8,15 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- CORE-1: Foundation types (`Vec2`, `Colour`, `SoundId`) and `IRenderer` pure interface in
+  `src/game/` (no SDL2 dependency); `Sdl2Renderer` stub in `src/rendering/` (`clear` +
+  `present` functional, `drawLine`/`drawLineStrip` stubs for RND-1); `MockRenderer` via
+  GoogleMock in `tests/unit/`; 8 Vec2 unit tests + 1 MockRenderer smoke test (9/9 passing).
+  `.clang-tidy` extended with `-bugprone-easily-swappable-parameters` (mathematical APIs
+  naturally pair same-type params). Verified: zero clang-tidy findings and ctest 9/9 on
+  both host (MSVC/Ninja) and RPi (GCC/ARM64/Makefile).
+
+### Added
 - INF-5: `scripts/deploy.sh` (rsync to `dan@dtdan`, excludes `.git/` and `build/`);
   `scripts/run_integration_tests.sh` (SSH build + `ctest` on RPi). Both use
   `set -euo pipefail`; exit non-zero on failure. Verified: build and ctest pass
