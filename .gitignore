@@ -11,6 +11,9 @@ _deps/
 .idea/
 *.user
 
+# CTest output
+Testing/
+
 # Compiled objects and libraries
 *.o
 *.a
