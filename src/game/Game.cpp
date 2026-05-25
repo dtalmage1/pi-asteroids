@@ -19,6 +19,9 @@ constexpr float kSplitAngle         =  0.5236F; // π/6 ≈ 30° divergence per 
 constexpr float kSplitSpeedMult     =  1.3F;    // children are 30% faster than parent
 constexpr float kSplitMinSpeed      = 60.0F;    // floor speed for stationary parent (pixels/s)
 constexpr float kSplitAngularMult   =  1.5F;    // children spin faster than parent
+constexpr int   kScoreLarge         =  20;
+constexpr int   kScoreMedium        =  50;
+constexpr int   kScoreSmall         = 100;
 } // namespace
 
 namespace ast {
@@ -46,6 +49,12 @@ std::vector<ast::Vec2> buildShipVertices(ast::Vec2 pos, float angle) {
         });
     }
     return verts;
+}
+
+int asteroidScore(ast::AsteroidSize size) noexcept {
+    if (size == ast::AsteroidSize::Large)  { return kScoreLarge;  }
+    if (size == ast::AsteroidSize::Medium) { return kScoreMedium; }
+    return kScoreSmall;
 }
 
 std::vector<ast::Asteroid> spawnChildren(const ast::Asteroid& parent, uint32_t seed) {
@@ -182,6 +191,7 @@ void Game::checkCollisions() {
             if (circlesOverlap(p.position, kProjectileRadius,
                                rock.position, Asteroid::radius(rock.size))) {
                 p.active      = false;
+                score_       += asteroidScore(rock.size);
                 auto children = spawnChildren(rock, splitSeed_);
                 splitSeed_   += 2U;
                 for (auto& child : children) { spawned.push_back(std::move(child)); }
@@ -247,5 +257,7 @@ void Game::render(IRenderer& renderer) const {
 GameState Game::state() const noexcept { return state_; }
 
 const Ship& Game::ship() const noexcept { return ship_; }
+
+int Game::score() const noexcept { return score_; }
 
 } // namespace ast

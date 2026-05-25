@@ -27,6 +27,7 @@ public:
     void      render(IRenderer& renderer) const;
     GameState state() const noexcept;
     const Ship& ship() const noexcept;
+    int       score() const noexcept;
 
     void spawnAsteroid(Asteroid a);
     const std::vector<Asteroid>& asteroids() const noexcept;
@@ -44,6 +45,7 @@ private:
     std::vector<Asteroid> asteroids_;
     std::array<Projectile, kMaxProjectiles> projectiles_{};
     std::uint32_t         splitSeed_ = 0;
+    int                   score_     = 0;
 };
 
 } // namespace ast
