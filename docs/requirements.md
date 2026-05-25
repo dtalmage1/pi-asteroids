@@ -676,6 +676,26 @@ unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAccele
 
 ---
 
+### IR-15 Asteroid Struct and Shape Generation **[FINAL]**
+
+**Acceptance criteria — all must pass before ENT-3 is Done:**
+
+1. `enum class AsteroidSize { Large, Medium, Small }` defined in `Asteroid.hpp`
+2. `Asteroid` struct: `position`, `velocity`, `angle`, `angularVel`, `size`, `shape`
+   (`std::vector<Vec2>`), `active` (default `false`);
+   `kRadiusLarge=48`, `kRadiusMedium=24`, `kRadiusSmall=12`; `radius(AsteroidSize)` static
+3. `generateAsteroidShape(size, vertices, seed)`: seeded `std::minstd_rand`; N points
+   evenly spaced around a circle at base radius ±20% jitter; same seed → same shape
+4. `Game::spawnAsteroid(Asteroid)` appends to internal `asteroids_` vector
+5. `Game::asteroids() const` returns `const std::vector<Asteroid>&`
+6. `Game::update` rotates (`wrapAngle(angle + angularVel*dt)`), integrates, and wraps
+   each active asteroid every frame
+7. 11 new tests (8 `Asteroid.*`, 3 game-integration) pass; 54/54 total on host (MSVC/Ninja)
+8. 54/54 total on RPi (GCC/Makefile); zero clang-tidy findings on both targets
+9. Visual: RND-3 (next) will make asteroids visible; ENT-3 has no visual DoD item
+
+---
+
 ### IR-14 Ship Controls and Attract→Playing Transition **[FINAL]**
 
 **Acceptance criteria — all must pass before ENT-2 is Done:**
@@ -746,3 +766,4 @@ unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAccele
 | IR-12 Sdl2Renderer drawLine and drawLineStrip | **Final** |
 | IR-13 Ship wireframe rendering | **Final** |
 | IR-14 Ship controls and Attract→Playing transition | **Final** |
+| IR-15 Asteroid struct and shape generation | **Final** |
