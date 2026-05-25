@@ -1,0 +1,150 @@
+#include <gtest/gtest.h>
+#include "game/entities/Projectile.hpp"
+#include "game/Game.hpp"
+#include "MockAudioSink.hpp"
+
+namespace {
+void startGame(ast::Game& game) {
+    ast::InputState input;
+    input.start = true;
+    game.update(1.0F / 60.0F, input);
+}
+} // namespace
+
+TEST(Projectile, DefaultsToInactive) {
+    const ast::Projectile p;
+    EXPECT_FALSE(p.active);
+}
+
+TEST(Projectile, DefaultOwnerIsPlayer) {
+    const ast::Projectile p;
+    EXPECT_EQ(p.owner, ast::ProjectileOwner::Player);
+}
+
+// Pressing fire in Playing state creates an active projectile.
+TEST(Game, FireSpawnsActiveProjectile) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::InputState input;
+    input.fire = true;
+    game.update(1.0F / 60.0F, input);
+
+    bool anyActive = false;
+    for (const auto& p : game.projectiles()) {
+        if (p.active) { anyActive = true; break; }
+    }
+    EXPECT_TRUE(anyActive);
+}
+
+// No more than kMaxProjectiles projectiles can be active at once.
+TEST(Game, FireCapAtFourProjectiles) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::InputState input;
+    input.fire = true;
+    for (int i = 0; i < 20; ++i) {
+        game.update(1.0F / 60.0F, input);
+    }
+
+    int activeCount = 0;
+    for (const auto& p : game.projectiles()) {
+        if (p.active) { ++activeCount; }
+    }
+    EXPECT_LE(activeCount, static_cast<int>(ast::kMaxProjectiles));
+}
+
+// Active projectile integrates position each frame.
+TEST(Game, ProjectileMovesEachFrame) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game); // ship angle=0, nose points up (-Y)
+
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    game.update(1.0F / 60.0F, fireInput);
+
+    float yBefore = 0.0F;
+    for (const auto& p : game.projectiles()) {
+        if (p.active) { yBefore = p.position.y; break; }
+    }
+
+    const ast::InputState noInput;
+    game.update(1.0F / 60.0F, noInput);
+
+    float yAfter = yBefore;
+    for (const auto& p : game.projectiles()) {
+        if (p.active) { yAfter = p.position.y; break; }
+    }
+    EXPECT_LT(yAfter, yBefore); // moving upward (decreasing Y)
+}
+
+// Projectile deactivates once its lifetime runs out.
+TEST(Game, ProjectileExpiresAfterLifetime) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    game.update(1.0F / 60.0F, fireInput);
+
+    const ast::InputState noInput;
+    for (int i = 0; i < 100; ++i) { // ~1.67s > 0.75s lifetime
+        game.update(1.0F / 60.0F, noInput);
+    }
+
+    bool anyActive = false;
+    for (const auto& p : game.projectiles()) {
+        if (p.active) { anyActive = true; break; }
+    }
+    EXPECT_FALSE(anyActive);
+}
+
+// Fire input is ignored while the game is in Attract state.
+TEST(Game, FireIgnoredInAttractState) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+
+    ast::InputState input;
+    input.fire = true;
+    game.update(1.0F / 60.0F, input);
+
+    bool anyActive = false;
+    for (const auto& p : game.projectiles()) {
+        if (p.active) { anyActive = true; break; }
+    }
+    EXPECT_FALSE(anyActive);
+}
+
+// Expired slot is reused when firing again.
+TEST(Game, FireSlotReusedAfterExpiry) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    // Fill all 4 slots
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    for (int i = 0; i < 4; ++i) {
+        game.update(1.0F / 60.0F, fireInput);
+    }
+
+    // Wait for all to expire
+    const ast::InputState noInput;
+    for (int i = 0; i < 100; ++i) {
+        game.update(1.0F / 60.0F, noInput);
+    }
+
+    // Fire again — should succeed
+    game.update(1.0F / 60.0F, fireInput);
+
+    bool anyActive = false;
+    for (const auto& p : game.projectiles()) {
+        if (p.active) { anyActive = true; break; }
+    }
+    EXPECT_TRUE(anyActive);
+}
