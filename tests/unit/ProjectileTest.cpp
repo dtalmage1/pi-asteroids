@@ -178,3 +178,65 @@ TEST(Game, RenderSkipsInactiveProjectiles) {
     // drawLine must NOT be called — MockRenderer fails on unexpected calls
     game.render(renderer);
 }
+
+// --- ENT-5: projectile vs asteroid collision ---
+
+// A projectile travelling into an asteroid deactivates both.
+TEST(Game, ProjectileDestroysAsteroidOnHit) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game); // ship at (400, 300), angle=0 → nose pointing up (-Y)
+
+    ast::Asteroid rock;
+    rock.position  = {400.0F, 150.0F}; // directly above ship, in shot path
+    rock.size      = ast::AsteroidSize::Large;
+    rock.shape     = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 42);
+    rock.active    = true;
+    game.spawnAsteroid(rock);
+
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    game.update(1.0F / 60.0F, fireInput);
+
+    const ast::InputState noInput;
+    for (int i = 0; i < 25; ++i) {
+        game.update(1.0F / 60.0F, noInput);
+    }
+
+    bool projActive = false;
+    for (const auto& p : game.projectiles()) {
+        if (p.active) { projActive = true; break; }
+    }
+    EXPECT_FALSE(projActive);
+    EXPECT_FALSE(game.asteroids().front().active);
+}
+
+// A projectile that misses a distant asteroid leaves both active.
+TEST(Game, ProjectileDoesNotDestroyDistantAsteroid) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game); // ship at (400, 300), firing upward
+
+    ast::Asteroid rock;
+    rock.position  = {0.0F, 0.0F}; // far corner — not in shot path
+    rock.size      = ast::AsteroidSize::Large;
+    rock.shape     = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 42);
+    rock.active    = true;
+    game.spawnAsteroid(rock);
+
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    game.update(1.0F / 60.0F, fireInput);
+
+    const ast::InputState noInput;
+    for (int i = 0; i < 5; ++i) {
+        game.update(1.0F / 60.0F, noInput);
+    }
+
+    bool projActive = false;
+    for (const auto& p : game.projectiles()) {
+        if (p.active) { projActive = true; break; }
+    }
+    EXPECT_TRUE(projActive);
+    EXPECT_TRUE(game.asteroids().front().active);
+}
