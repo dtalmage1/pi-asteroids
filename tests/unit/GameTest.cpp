@@ -19,10 +19,19 @@ TEST(Game, UpdateDoesNotCrash) {
     EXPECT_EQ(game.state(), ast::GameState::Attract);
 }
 
-// render() is callable without drawing anything while it is a stub.
-TEST(Game, RenderDoesNotCrash) {
+// render() draws the ship wireframe once per frame.
+TEST(Game, RenderDrawsShipWireframe) {
     ast::MockAudioSink audio;
     ast::MockRenderer  renderer;
     ast::Game game(audio, {800.0F, 600.0F});
+    EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, true)).Times(1);
     game.render(renderer);
+}
+
+// Ship spawns at the centre of the screen on construction.
+TEST(Game, ShipSpawnsAtScreenCenter) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    EXPECT_FLOAT_EQ(game.ship().position.x, 400.0F);
+    EXPECT_FLOAT_EQ(game.ship().position.y, 300.0F);
 }
