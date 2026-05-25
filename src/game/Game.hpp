@@ -29,6 +29,7 @@ public:
     const Ship& ship() const noexcept;
     int       score() const noexcept;
     int       waveNumber() const noexcept;
+    int       lives() const noexcept;
 
     void spawnAsteroid(Asteroid a);
     const std::vector<Asteroid>& asteroids() const noexcept;
@@ -40,6 +41,7 @@ private:
     void checkShipCollisions();
     void tickWave(float dt);
     void startWave();
+    void tickRespawn(float dt);
 
     IAudioSink&           audio_;
     Vec2                  screenSize_;
@@ -53,6 +55,9 @@ private:
     float                 interWaveTimer_ = 0.0F;
     bool                  prevAllClear_   = true;
     std::uint32_t         waveSeed_       = 1000U;
+    int                   lives_              = 0;
+    float                 respawnTimer_       = 0.0F;
+    int                   nextExtraLifeScore_ = 0;
 };
 
 } // namespace ast

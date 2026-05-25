@@ -8,6 +8,13 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- GAME-3: Lives system — 3 lives per game; `lives_` decremented on ship death;
+  `respawnTimer_` (3 s) drives `tickRespawn()`: expired lives → `GameOver`, remaining
+  lives → `Playing` with `invincTimer` (3 s) set; ship flashes while invincible via
+  `std::fmod`; extra life awarded every 10 000 pts (`nextExtraLifeScore_`);
+  `lives()` public accessor. 10 new tests; 101/101 passing.
+
+### Added
 - GAME-2: Wave management — `waveAsteroidCount(wave)` free function (4→6→8→10→11 cap);
   `tickWave()` private helper drives a 2-second startup delay and 2-second inter-wave pause;
   `startWave()` spawns N large asteroids at random screen-edge positions; `waveNumber()`

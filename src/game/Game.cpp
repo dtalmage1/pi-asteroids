@@ -30,6 +30,11 @@ constexpr float kPi                    =  3.14159265358979323846F;
 constexpr float kAsteroidMinSpeed      = 50.0F;   // pixels/s
 constexpr float kAsteroidMaxSpeed      = 120.0F;  // pixels/s
 constexpr float kAsteroidAngularVelMax =  1.5F;   // rad/s
+constexpr int   kInitialLives          =  3;
+constexpr float kRespawnDelay          =  3.0F;   // seconds before ship respawns
+constexpr float kInvincDuration        =  3.0F;   // seconds of invincibility after respawn
+constexpr int   kExtraLifeScore        = 10000;
+constexpr float kFlashPeriod           =  0.1F;   // half-period of ship flash while invincible
 } // namespace
 
 namespace ast {
@@ -119,7 +124,7 @@ std::vector<ast::Vec2> buildAsteroidVertices(const ast::Asteroid& rock) {
 } // namespace
 
 Game::Game(IAudioSink& audio, Vec2 screenSize)
-    : audio_(audio), screenSize_(screenSize)
+    : audio_(audio), screenSize_(screenSize), nextExtraLifeScore_(kExtraLifeScore)
 {
     ship_.position = {screenSize_.x / 2.0F, screenSize_.y / 2.0F};
 }
@@ -133,12 +138,15 @@ void Game::update(float dt, const InputState& input) {
         ship_.active    = true;
         asteroids_.clear();
         projectiles_    = {};
-        score_          = 0;
-        splitSeed_      = 0;
-        waveNumber_     = 0;
-        interWaveTimer_ = kInterWaveDelay;
-        prevAllClear_   = true;
-        waveSeed_       = 1000U;
+        score_              = 0;
+        splitSeed_          = 0;
+        waveNumber_         = 0;
+        interWaveTimer_     = kInterWaveDelay;
+        prevAllClear_       = true;
+        waveSeed_           = 1000U;
+        lives_              = kInitialLives;
+        respawnTimer_       = 0.0F;
+        nextExtraLifeScore_ = kExtraLifeScore;
     }
 
     if (state_ == GameState::Playing && ship_.active) {
@@ -181,6 +189,7 @@ void Game::update(float dt, const InputState& input) {
     checkCollisions();
     checkShipCollisions();
     tickWave(dt);
+    tickRespawn(dt);
 }
 
 void Game::tryFire(const InputState& input) {
@@ -209,6 +218,10 @@ void Game::checkCollisions() {
                                rock.position, Asteroid::radius(rock.size))) {
                 p.active      = false;
                 score_       += asteroidScore(rock.size);
+                if (score_ >= nextExtraLifeScore_) {
+                    nextExtraLifeScore_ += kExtraLifeScore;
+                    ++lives_;
+                }
                 auto children = spawnChildren(rock, splitSeed_);
                 splitSeed_   += 2U;
                 for (auto& child : children) { spawned.push_back(std::move(child)); }
@@ -227,8 +240,10 @@ void Game::checkShipCollisions() {
         if (!rock.active) { continue; }
         if (circlesOverlap(ship_.position, Ship::kRadius,
                            rock.position, Asteroid::radius(rock.size))) {
-            ship_.active = false;
-            state_       = GameState::PlayerDead;
+            ship_.active    = false;
+            --lives_;
+            respawnTimer_   = kRespawnDelay;
+            state_          = GameState::PlayerDead;
             return;
         }
     }
@@ -246,12 +261,34 @@ const std::array<Projectile, kMaxProjectiles>& Game::projectiles() const noexcep
     return projectiles_;
 }
 
+void Game::tickRespawn(float dt) {
+    if (state_ != GameState::PlayerDead) { return; }
+    respawnTimer_ -= dt;
+    if (respawnTimer_ <= 0.0F) {
+        if (lives_ <= 0) {
+            state_ = GameState::GameOver;
+        } else {
+            state_            = GameState::Playing;
+            ship_.position    = {screenSize_.x / 2.0F, screenSize_.y / 2.0F};
+            ship_.velocity    = {0.0F, 0.0F};
+            ship_.angle       = 0.0F;
+            ship_.invincTimer = kInvincDuration;
+            ship_.active      = true;
+        }
+    }
+}
+
 void Game::render(IRenderer& renderer) const {
     if (ship_.active) {
-        renderer.drawLineStrip(
-            buildShipVertices(ship_.position, ship_.angle),
-            Colour{255, 255, 255, 255},
-            true);
+        const bool showShip =
+            (ship_.invincTimer <= 0.0F) ||
+            (std::fmod(ship_.invincTimer, (2.0F * kFlashPeriod)) < kFlashPeriod);
+        if (showShip) {
+            renderer.drawLineStrip(
+                buildShipVertices(ship_.position, ship_.angle),
+                Colour{255, 255, 255, 255},
+                true);
+        }
     }
     for (const auto& rock : asteroids_) {
         if (!rock.active || rock.shape.empty()) { continue; }
@@ -336,5 +373,7 @@ const Ship& Game::ship() const noexcept { return ship_; }
 int Game::score() const noexcept { return score_; }
 
 int Game::waveNumber() const noexcept { return waveNumber_; }
+
+int Game::lives() const noexcept { return lives_; }
 
 } // namespace ast
