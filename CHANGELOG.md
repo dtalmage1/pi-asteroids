@@ -8,6 +8,14 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- ENT-1: `Physics.hpp` inline free functions (`integratePosition`, `applyThrust`,
+  `applyDrag`, `wrapPosition`, `wrapAngle`); `Collision.hpp` (`circlesOverlap`);
+  `Ship` struct (position, velocity, angle, invincTimer, thrusting, active; kRadius=10);
+  `Game::update` applies ship drift (drag → integrate → wrap) in Playing state;
+  `Game::ship()` const accessor. Architecture doc corrected: thrust vector is
+  `Vec2(sin θ, −cos θ)` not `Vec2(−sin θ, −cos θ)`. 18 new tests; 37/37 passing.
+
+### Added
 - CORE-5: `Game` class; `GameState` enum (`Attract`, `Playing`, `PlayerDead`, `GameOver`);
   state machine scaffold; `Game::update(dt, InputState)` and `Game::render(IRenderer&)` stubs;
   `main.cpp` wired with `Sdl2InputSource`, `Sdl2AudioSink`, and `Game`; dt computed from

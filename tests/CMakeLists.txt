@@ -15,6 +15,9 @@ add_executable(unit_tests
     unit/InputStateTest.cpp
     unit/AudioSinkTest.cpp
     unit/GameTest.cpp
+    unit/PhysicsTest.cpp
+    unit/CollisionTest.cpp
+    unit/ShipTest.cpp
 )
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 target_link_libraries(unit_tests PRIVATE

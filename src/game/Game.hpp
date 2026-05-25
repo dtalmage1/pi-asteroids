@@ -3,6 +3,7 @@
 #include "game/IRenderer.hpp"
 #include "game/InputState.hpp"
 #include "game/Vec2.hpp"
+#include "game/entities/Ship.hpp"
 
 namespace ast {
 
@@ -20,11 +21,13 @@ public:
     void      update(float dt, const InputState& input);
     void      render(IRenderer& renderer) const;
     GameState state() const noexcept;
+    const Ship& ship() const noexcept;
 
 private:
     IAudioSink& audio_;
     Vec2        screenSize_;
     GameState   state_ = GameState::Attract;
+    Ship        ship_;
 };
 
 } // namespace ast

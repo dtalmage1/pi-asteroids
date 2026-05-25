@@ -282,7 +282,9 @@ struct Particle {
 
 **Y axis:** increases downward (SDL2 convention). Physics math uses this directly; no flip.
 Rotation angles increase clockwise. Ship "up" (nose direction) is angle = 0, pointing
-toward screen top (negative Y). Thrust vector: `Vec2(-sinf(angle), -cosf(angle)) * thrust`.
+toward screen top (negative Y). Thrust vector: `Vec2(sinf(angle), -cosf(angle)) * thrust`.
+(Derivation: clockwise rotation by θ applied to (0,−1) in Y-down screen coords gives
+(sin θ, −cos θ). The sign on sin is positive, not negative.)
 
 **Wrap-around:** applied after integration. If `x < 0`, `x += W`; if `x >= W`, `x -= W`;
 same for Y. Applied to Ship, Asteroid, Saucer, Projectile. Particles do not wrap (they
