@@ -38,6 +38,20 @@ std::vector<ast::Vec2> buildShipVertices(ast::Vec2 pos, float angle) {
     return verts;
 }
 
+std::vector<ast::Vec2> buildAsteroidVertices(const ast::Asteroid& rock) {
+    const float cosA = std::cos(rock.angle);
+    const float sinA = std::sin(rock.angle);
+    std::vector<ast::Vec2> verts;
+    verts.reserve(rock.shape.size());
+    for (const auto& v : rock.shape) {
+        verts.push_back({
+            rock.position.x + (v.x * cosA) - (v.y * sinA),
+            rock.position.y + (v.x * sinA) + (v.y * cosA)
+        });
+    }
+    return verts;
+}
+
 } // namespace
 
 Game::Game(IAudioSink& audio, Vec2 screenSize)
@@ -92,6 +106,13 @@ void Game::render(IRenderer& renderer) const {
     if (ship_.active) {
         renderer.drawLineStrip(
             buildShipVertices(ship_.position, ship_.angle),
+            Colour{255, 255, 255, 255},
+            true);
+    }
+    for (const auto& rock : asteroids_) {
+        if (!rock.active || rock.shape.empty()) { continue; }
+        renderer.drawLineStrip(
+            buildAsteroidVertices(rock),
             Colour{255, 255, 255, 255},
             true);
     }

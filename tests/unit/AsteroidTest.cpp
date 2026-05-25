@@ -2,6 +2,7 @@
 #include "game/entities/Asteroid.hpp"
 #include "game/Game.hpp"
 #include "MockAudioSink.hpp"
+#include "MockRenderer.hpp"
 
 // --- Asteroid struct ---
 
@@ -112,4 +113,50 @@ TEST(Asteroid, InactiveAsteroidDoesNotMove) {
     game.update(1.0F / 60.0F, noInput);
 
     EXPECT_FLOAT_EQ(game.asteroids().front().position.x, 200.0F);
+}
+
+// --- RND-3: asteroid wireframe rendering ---
+
+// Active asteroid with a shape is drawn once per frame (plus the ship).
+TEST(Asteroid, RenderDrawsActiveAsteroid) {
+    ast::MockAudioSink audio;
+    ast::MockRenderer  renderer;
+    ast::Game game(audio, {800.0F, 600.0F});
+
+    ast::Asteroid rock;
+    rock.shape  = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 1U);
+    rock.active = true;
+    game.spawnAsteroid(rock);
+
+    EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, true)).Times(2);
+    game.render(renderer);
+}
+
+// Inactive asteroid is skipped; only the ship is drawn.
+TEST(Asteroid, RenderSkipsInactiveAsteroid) {
+    ast::MockAudioSink audio;
+    ast::MockRenderer  renderer;
+    ast::Game game(audio, {800.0F, 600.0F});
+
+    ast::Asteroid rock;
+    rock.shape  = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 1U);
+    rock.active = false;
+    game.spawnAsteroid(rock);
+
+    EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, true)).Times(1);
+    game.render(renderer);
+}
+
+// Asteroid with no shape vertices is skipped.
+TEST(Asteroid, RenderSkipsAsteroidWithEmptyShape) {
+    ast::MockAudioSink audio;
+    ast::MockRenderer  renderer;
+    ast::Game game(audio, {800.0F, 600.0F});
+
+    ast::Asteroid rock;
+    rock.active = true; // active but no shape
+    game.spawnAsteroid(rock);
+
+    EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, true)).Times(1);
+    game.render(renderer);
 }
