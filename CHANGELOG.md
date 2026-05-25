@@ -8,6 +8,15 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- RND-6: Explosion particles — `Particle` struct (`position`, `velocity`, `lifetime`,
+  `maxLifetime`, `active`); `kMaxParticles=128` fixed-size pool; `spawnExplosion(pos, count)`
+  seeds from `particleSeed_` counter, picks random directions/speeds/lifetimes;
+  called on asteroid destroy (8 particles) and ship destroy (12 particles);
+  `tickParticles()` integrates position and expires; rendered as short fading line
+  segments (alpha ∝ remaining lifetime fraction); pool and seed reset on new game.
+  6 new tests; 129/129 passing.
+
+### Added
 - GAME-5: Attract screen — "ASTEROIDS" title (10% screen height, centred at 30% y) and
   "PRESS START" prompt (5% screen height, centred at 55% y) rendered via stroke font;
   Glyph.cpp extended with letters D, I, P, S, T; overlay shown only in Attract state.

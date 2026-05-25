@@ -4,6 +4,7 @@
 #include "game/InputState.hpp"
 #include "game/Vec2.hpp"
 #include "game/entities/Asteroid.hpp"
+#include "game/entities/Particle.hpp"
 #include "game/entities/Projectile.hpp"
 #include "game/entities/Ship.hpp"
 #include <array>
@@ -34,11 +35,14 @@ public:
     void spawnAsteroid(Asteroid a);
     const std::vector<Asteroid>& asteroids() const noexcept;
     const std::array<Projectile, kMaxProjectiles>& projectiles() const noexcept;
+    const std::array<Particle,   kMaxParticles>&   particles()   const noexcept;
 
 private:
     void tryFire(const InputState& input);
     void checkCollisions();
     void checkShipCollisions();
+    void spawnExplosion(Vec2 pos, int count);
+    void tickParticles(float dt);
     void tickWave(float dt);
     void startWave();
     void tickRespawn(float dt);
@@ -50,7 +54,9 @@ private:
     Ship                  ship_;
     std::vector<Asteroid> asteroids_;
     std::array<Projectile, kMaxProjectiles> projectiles_{};
+    std::array<Particle,   kMaxParticles>   particles_{};
     std::uint32_t         splitSeed_      = 0;
+    std::uint32_t         particleSeed_   = 0U;
     int                   score_          = 0;
     int                   waveNumber_     = 0;
     float                 interWaveTimer_ = 0.0F;

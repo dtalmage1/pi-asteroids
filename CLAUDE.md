@@ -66,22 +66,24 @@ so Claude Code does not prompt for each invocation.
 
 ## Workflow
 
+> **Note for Claude Code:** Always inline paths directly into `cmd /c '...'` calls using
+> PowerShell single-quoted strings — never use shell variables (e.g. `$vcvars = ...`).
+> Static commands can be whitelisted in `.claude/settings.json` by prefix; variable
+> assignment lines cannot.
+
 ### Configure (host — Windows, one-time per build tree)
 
-Requires the MSVC environment. Run from a **VS 2022 Developer PowerShell**, or
-activate `vcvars64.bat` manually before calling cmake:
+Requires the MSVC environment. Inline `vcvars64.bat` into a single `cmd /c` call so the
+command is fully static and can be whitelisted in `.claude/settings.json`:
 
 ```powershell
-$vcvars = "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-$ninja  = "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe"
-cmd /c "`"$vcvars`" >nul 2>&1 && cmake -G Ninja -DCMAKE_MAKE_PROGRAM=`"$ninja`" -B build ."
+cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1 && cmake -G Ninja -DCMAKE_MAKE_PROGRAM="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe" -B build .'
 ```
 
 ### Build (host)
 
 ```powershell
-$vcvars = "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-cmd /c "`"$vcvars`" >nul 2>&1 && cmake --build build"
+cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1 && cmake --build build'
 ```
 
 Clang-tidy runs automatically on project sources during the build (Ninja generator).
@@ -104,8 +106,7 @@ ssh dan@dtdan "cd ~/Documents/Projects/Asteroids/build && ./asteroids"
 
 ### Run Tests (host, mocked hardware)
 ```powershell
-$vcvars = "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-cmd /c "`"$vcvars`" >nul 2>&1 && cmake --build build && ctest --test-dir build --output-on-failure"
+cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" >nul 2>&1 && cmake --build build && ctest --test-dir build --output-on-failure'
 ```
 
 ### Run Tests (RPi, real hardware)
