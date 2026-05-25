@@ -7,6 +7,7 @@
 #include "game/entities/Projectile.hpp"
 #include "game/entities/Ship.hpp"
 #include <array>
+#include <cstdint>
 #include <vector>
 
 namespace ast {
@@ -37,10 +38,11 @@ private:
 
     IAudioSink&           audio_;
     Vec2                  screenSize_;
-    GameState             state_ = GameState::Attract;
+    GameState             state_     = GameState::Attract;
     Ship                  ship_;
     std::vector<Asteroid> asteroids_;
     std::array<Projectile, kMaxProjectiles> projectiles_{};
+    std::uint32_t         splitSeed_ = 0;
 };
 
 } // namespace ast
