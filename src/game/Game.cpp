@@ -38,6 +38,10 @@ constexpr float kInvincDuration        =  3.0F;   // seconds of invincibility af
 constexpr int   kExtraLifeScore        = 10000;
 constexpr float kFlashPeriod           =  0.1F;   // half-period of ship flash while invincible
 constexpr float kGameOverDelay         =  5.0F;   // seconds before auto-returning to Attract
+constexpr float kAttractTitleCharHeightFrac  = 0.10F;
+constexpr float kAttractTitleYFrac           = 0.30F;
+constexpr float kAttractPromptCharHeightFrac = 0.05F;
+constexpr float kAttractPromptYFrac          = 0.55F;
 constexpr float kHudMargin             = 10.0F;   // pixels from screen edge to HUD elements
 constexpr float kHudCharHeightFrac     =  0.04F;  // score digit height as fraction of screen height
 constexpr float kShipIconSpan          = 24.0F;   // kShipShape vertical extent: nose(-15) to tail(+9)
@@ -353,6 +357,20 @@ void Game::render(IRenderer& renderer) const {
                 Colour{255, 255, 255, 255},
                 true);
         }
+    }
+
+    if (state_ == GameState::Attract) {
+        const float titleCharH = screenSize_.y * kAttractTitleCharHeightFrac;
+        const float titleW     = stringWidth(titleCharH, "ASTEROIDS");
+        drawString(renderer,
+                   Vec2{((screenSize_.x - titleW) * 0.5F), (screenSize_.y * kAttractTitleYFrac)},
+                   titleCharH, "ASTEROIDS", Colour{255, 255, 255, 255});
+
+        const float promptCharH = screenSize_.y * kAttractPromptCharHeightFrac;
+        const float promptW     = stringWidth(promptCharH, "PRESS START");
+        drawString(renderer,
+                   Vec2{((screenSize_.x - promptW) * 0.5F), (screenSize_.y * kAttractPromptYFrac)},
+                   promptCharH, "PRESS START", Colour{255, 255, 255, 255});
     }
 
     if (state_ == GameState::GameOver) {
