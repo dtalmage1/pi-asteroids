@@ -529,6 +529,36 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-9 Platform RAII and Game Loop **[FINAL]**
+
+**Acceptance criteria — all must pass before CORE-4 is Done:**
+
+1. `src/platform/Platform.hpp` / `.cpp` define `class Platform` in namespace `ast`:
+   - Constructor calls `SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK)`;
+     logs to stderr and returns early on failure (POL-2 will add proper error exit)
+   - Destructor destroys the window then calls `SDL_Quit()` — RAII; safe even if init failed
+   - `window()` returns the owned `SDL_Window*` (nullptr if window creation failed)
+   - Non-copyable, non-movable
+2. `src/main.cpp` implements the game loop:
+   - Creates `Platform` and `Sdl2Renderer` on the stack; returns 1 if window is null
+   - 60 Hz target: measures elapsed frame time with `SDL_GetPerformanceCounter`;
+     sleeps the remainder of each 16.67 ms slot via `SDL_Delay`
+   - `SDL_PollEvent` loop processes `SDL_QUIT` → sets quit flag
+   - Calls `renderer.clear(black)` and `renderer.present()` each tick
+3. Running on RPi produces a black window that stays open until the window is closed
+   via the OS (quit on START button deferred to CORE-5 when Game is wired up)
+4. `cmake --build build` exits 0 on host (MSVC/Ninja) — zero clang-tidy findings
+5. `cmake --build build` exits 0 on RPi (GCC/ARM64/Makefile) — zero clang-tidy findings
+6. `ctest --output-on-failure` exits 0 on both host and RPi (existing 16 tests unaffected)
+
+**Legitimate waivers for CORE-4:**
+- Unit tests: all new logic is SDL2-dependent (window creation, event loop, frame timing)
+  and cannot be exercised in the headless unit test environment. Integration test:
+  run `./asteroids` on RPi, observe black window; close with window manager to verify
+  clean exit and no crashes or resource leaks.
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -572,3 +602,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | IR-6 Foundation types and IRenderer interface | **Final** |
 | IR-7 IInputSource interface and Sdl2InputSource stub | **Final** |
 | IR-8 IAudioSink interface, NullAudioSink, and Sdl2AudioSink stub | **Final** |
+| IR-9 Platform RAII and game loop | **Final** |

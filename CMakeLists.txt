@@ -97,6 +97,7 @@ target_link_libraries(asteroids PRIVATE
     lib_rendering
     lib_input
     lib_audio
+    SDL2::SDL2-static
 )
 
 # ── clang-tidy (applied to project targets only, not FetchContent deps) ───────
