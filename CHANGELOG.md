@@ -8,6 +8,11 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- RND-4: Active projectile rendered as a short line segment (4px total, centred on
+  `position`, oriented along normalised velocity) via `IRenderer::drawLine`;
+  inactive projectiles skipped. 2 new tests; 67/67 passing.
+
+### Added
 - ENT-4: `ProjectileOwner` enum (`Player`/`Saucer`); `Projectile` struct (position,
   velocity, lifetime, owner, active); `kMaxProjectiles=4` constexpr; `Game::projectiles()`
   accessor; firing from nose tip (`ship.position + nose * 15px`) on `InputState::fire`
