@@ -496,6 +496,39 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-8 IAudioSink Interface, NullAudioSink, and Sdl2AudioSink Stub **[FINAL]**
+
+**Acceptance criteria — all must pass before CORE-3 is Done:**
+
+1. `src/game/IAudioSink.hpp` defines `class IAudioSink` (pure interface) in namespace `ast`:
+   - 4 pure virtual methods: `play(SoundId)`, `loop(SoundId)`, `stop(SoundId)`,
+     `isPlaying(SoundId) const`
+   - Non-copyable, non-movable
+   - No SDL2 or SDL2_mixer dependency; includes only `game/SoundId.hpp`
+2. `src/game/NullAudioSink.hpp` defines `class NullAudioSink : public IAudioSink`:
+   - All methods are no-ops; `isPlaying()` always returns `false`
+   - Header-only; no SDL2 or SDL2_mixer dependency
+3. `src/audio/Sdl2AudioSink.hpp` / `.cpp` provide `class Sdl2AudioSink : public IAudioSink`:
+   - Constructor calls `Mix_OpenAudio`; tracks success in `initialised_` bool
+   - Destructor calls `Mix_CloseAudio()` if and only if `initialised_` is true — RAII
+   - `play`, `loop`, `stop` are stubs (no-op); `isPlaying` returns `false` (audio wired
+     in AUD-1 when WAV assets are available)
+   - `lib_game` retains no SDL2 or SDL2_mixer dependency
+4. `tests/unit/MockAudioSink.hpp` provides `class MockAudioSink : public IAudioSink`
+   using GoogleMock
+5. Unit tests cover: `NullAudioSink::isPlaying` returns `false` for any `SoundId`;
+   `NullAudioSink` play/loop/stop methods callable without crash;
+   `MockAudioSink` wires up correctly to the `IAudioSink` interface
+6. `cmake --build build` exits 0 on host (MSVC/Ninja) — zero clang-tidy findings
+7. `cmake --build build` exits 0 on RPi (GCC/ARM64/Makefile) — zero clang-tidy findings
+8. `ctest --output-on-failure` exits 0 on both host and RPi
+
+**Legitimate waivers for CORE-3:**
+- No integration test for actual audio output — hardware-in-the-loop test deferred to
+  AUD-1 when real WAV assets are sourced and `Sdl2AudioSink` playback is implemented
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -538,3 +571,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | IR-5 Deploy and integration test scripts | **Final** |
 | IR-6 Foundation types and IRenderer interface | **Final** |
 | IR-7 IInputSource interface and Sdl2InputSource stub | **Final** |
+| IR-8 IAudioSink interface, NullAudioSink, and Sdl2AudioSink stub | **Final** |

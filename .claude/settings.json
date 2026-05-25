@@ -29,7 +29,10 @@
       "PowerShell(Get-Content *)",
       "PowerShell(Get-ChildItem *)",
       "PowerShell(ssh *)",
-      "PowerShell(cmd *)"
+      "PowerShell(cmd *)",
+      "PowerShell($vcvars*)",
+      "Bash(scp *)",
+      "PowerShell(scp *)"
     ],
     "deny": [
       "Bash(rm*)",
