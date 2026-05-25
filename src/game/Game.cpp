@@ -1,27 +1,35 @@
 #include "game/Game.hpp"
 #include "game/Colour.hpp"
+#include "game/Wave.hpp"
 #include "game/physics/Collision.hpp"
 #include "game/physics/Physics.hpp"
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <random>
 #include <vector>
 
 namespace {
-constexpr float kShipDrag           = 0.5F;
-constexpr float kRotationRate       = 3.5F;   // rad/s (~200 deg/s)
-constexpr float kThrustAccel        = 200.0F; // pixels/s²
-constexpr float kProjectileSpeed    = 500.0F; // pixels/s
-constexpr float kProjectileLifetime = 0.75F;  // seconds
-constexpr float kShipNoseOffset     = 15.0F;  // pixels from ship centre to nose tip
-constexpr float kProjectileHalfLen  =  2.0F;  // half visual length of projectile line
-constexpr float kProjectileRadius   =  2.0F;  // collision radius (matches visual size)
-constexpr float kSplitAngle         =  0.5236F; // π/6 ≈ 30° divergence per child
-constexpr float kSplitSpeedMult     =  1.3F;    // children are 30% faster than parent
-constexpr float kSplitMinSpeed      = 60.0F;    // floor speed for stationary parent (pixels/s)
-constexpr float kSplitAngularMult   =  1.5F;    // children spin faster than parent
-constexpr int   kScoreLarge         =  20;
-constexpr int   kScoreMedium        =  50;
-constexpr int   kScoreSmall         = 100;
+constexpr float kShipDrag              = 0.5F;
+constexpr float kRotationRate          = 3.5F;    // rad/s (~200 deg/s)
+constexpr float kThrustAccel           = 200.0F;  // pixels/s²
+constexpr float kProjectileSpeed       = 500.0F;  // pixels/s
+constexpr float kProjectileLifetime    = 0.75F;   // seconds
+constexpr float kShipNoseOffset        = 15.0F;   // pixels from ship centre to nose tip
+constexpr float kProjectileHalfLen     =  2.0F;   // half visual length of projectile line
+constexpr float kProjectileRadius      =  2.0F;   // collision radius (matches visual size)
+constexpr float kSplitAngle            =  0.5236F; // π/6 ≈ 30° divergence per child
+constexpr float kSplitSpeedMult        =  1.3F;    // children are 30% faster than parent
+constexpr float kSplitMinSpeed         = 60.0F;    // floor speed for stationary parent (pixels/s)
+constexpr float kSplitAngularMult      =  1.5F;    // children spin faster than parent
+constexpr int   kScoreLarge            =  20;
+constexpr int   kScoreMedium           =  50;
+constexpr int   kScoreSmall            = 100;
+constexpr float kInterWaveDelay        =  2.0F;   // seconds between wave clear and next spawn
+constexpr float kPi                    =  3.14159265358979323846F;
+constexpr float kAsteroidMinSpeed      = 50.0F;   // pixels/s
+constexpr float kAsteroidMaxSpeed      = 120.0F;  // pixels/s
+constexpr float kAsteroidAngularVelMax =  1.5F;   // rad/s
 } // namespace
 
 namespace ast {
@@ -118,11 +126,19 @@ Game::Game(IAudioSink& audio, Vec2 screenSize)
 
 void Game::update(float dt, const InputState& input) {
     if (state_ == GameState::Attract && input.start) {
-        state_         = GameState::Playing;
-        ship_.position = {screenSize_.x / 2.0F, screenSize_.y / 2.0F};
-        ship_.velocity = {0.0F, 0.0F};
-        ship_.angle    = 0.0F;
-        ship_.active   = true;
+        state_          = GameState::Playing;
+        ship_.position  = {screenSize_.x / 2.0F, screenSize_.y / 2.0F};
+        ship_.velocity  = {0.0F, 0.0F};
+        ship_.angle     = 0.0F;
+        ship_.active    = true;
+        asteroids_.clear();
+        projectiles_    = {};
+        score_          = 0;
+        splitSeed_      = 0;
+        waveNumber_     = 0;
+        interWaveTimer_ = kInterWaveDelay;
+        prevAllClear_   = true;
+        waveSeed_       = 1000U;
     }
 
     if (state_ == GameState::Playing && ship_.active) {
@@ -164,6 +180,7 @@ void Game::update(float dt, const InputState& input) {
 
     checkCollisions();
     checkShipCollisions();
+    tickWave(dt);
 }
 
 void Game::tryFire(const InputState& input) {
@@ -254,10 +271,70 @@ void Game::render(IRenderer& renderer) const {
     }
 }
 
+void Game::tickWave(float dt) {
+    if (state_ != GameState::Playing) { return; }
+
+    const bool allClear = std::none_of(asteroids_.begin(), asteroids_.end(),
+                                        [](const Asteroid& a) { return a.active; });
+
+    if (!prevAllClear_ && allClear) {
+        interWaveTimer_ = kInterWaveDelay;
+    }
+    prevAllClear_ = allClear;
+
+    if (interWaveTimer_ > 0.0F) { interWaveTimer_ -= dt; }
+
+    if (allClear && interWaveTimer_ <= 0.0F) {
+        ++waveNumber_;
+        startWave();
+        prevAllClear_ = false;
+    }
+}
+
+void Game::startWave() {
+    const int count = waveAsteroidCount(waveNumber_);
+    std::minstd_rand rng(waveSeed_);
+
+    const auto randFloat = [&rng](float lo, float hi) -> float {
+        const float frac = static_cast<float>(rng()) / static_cast<float>(std::minstd_rand::max());
+        return lo + (frac * (hi - lo));
+    };
+
+    for (int i = 0; i < count; ++i) {
+        Asteroid rock;
+
+        const auto edgeIdx = rng() % 4U;
+        if (edgeIdx == 0U) {
+            rock.position = {randFloat(0.0F, screenSize_.x), 0.0F};
+        } else if (edgeIdx == 1U) {
+            rock.position = {screenSize_.x, randFloat(0.0F, screenSize_.y)};
+        } else if (edgeIdx == 2U) {
+            rock.position = {randFloat(0.0F, screenSize_.x), screenSize_.y};
+        } else {
+            rock.position = {0.0F, randFloat(0.0F, screenSize_.y)};
+        }
+
+        const float angle = randFloat(0.0F, (2.0F * kPi));
+        const float speed = randFloat(kAsteroidMinSpeed, kAsteroidMaxSpeed);
+        const float sinA  = std::sin(angle);
+        const float cosA  = std::cos(angle);
+        rock.velocity     = Vec2{sinA, -cosA} * speed;
+        rock.angularVel   = randFloat(-kAsteroidAngularVelMax, kAsteroidAngularVelMax);
+        rock.size         = AsteroidSize::Large;
+        rock.shape        = generateAsteroidShape(AsteroidSize::Large, 10,
+                                                   waveSeed_ + static_cast<std::uint32_t>(i));
+        rock.active       = true;
+        asteroids_.push_back(rock);
+    }
+    waveSeed_ += static_cast<std::uint32_t>(count);
+}
+
 GameState Game::state() const noexcept { return state_; }
 
 const Ship& Game::ship() const noexcept { return ship_; }
 
 int Game::score() const noexcept { return score_; }
+
+int Game::waveNumber() const noexcept { return waveNumber_; }
 
 } // namespace ast

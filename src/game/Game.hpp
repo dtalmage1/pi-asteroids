@@ -28,6 +28,7 @@ public:
     GameState state() const noexcept;
     const Ship& ship() const noexcept;
     int       score() const noexcept;
+    int       waveNumber() const noexcept;
 
     void spawnAsteroid(Asteroid a);
     const std::vector<Asteroid>& asteroids() const noexcept;
@@ -37,15 +38,21 @@ private:
     void tryFire(const InputState& input);
     void checkCollisions();
     void checkShipCollisions();
+    void tickWave(float dt);
+    void startWave();
 
     IAudioSink&           audio_;
     Vec2                  screenSize_;
-    GameState             state_     = GameState::Attract;
+    GameState             state_          = GameState::Attract;
     Ship                  ship_;
     std::vector<Asteroid> asteroids_;
     std::array<Projectile, kMaxProjectiles> projectiles_{};
-    std::uint32_t         splitSeed_ = 0;
-    int                   score_     = 0;
+    std::uint32_t         splitSeed_      = 0;
+    int                   score_          = 0;
+    int                   waveNumber_     = 0;
+    float                 interWaveTimer_ = 0.0F;
+    bool                  prevAllClear_   = true;
+    std::uint32_t         waveSeed_       = 1000U;
 };
 
 } // namespace ast
