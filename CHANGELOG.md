@@ -8,6 +8,12 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- ENT-2: `Game::update` handles `rotateLeft`/`rotateRight` (3.5 rad/s), `thrust`
+  (200 px/s² via `applyThrust`), and `ship_.thrusting` flag; `Attract→Playing`
+  transition on `InputState::start` (ship reset to centre, zero velocity, zero angle);
+  rotation wrapped via `wrapAngle` each frame. 5 new tests; 43/43 passing.
+
+### Added
 - RND-2: `Game::render` draws ship chevron wireframe each frame via `IRenderer::drawLineStrip`
   (4 vertices: nose `(0,−15)`, right wing `(9,9)`, tail notch `(0,4)`, left wing `(−9,9)`,
   rotated by `ship_.angle` using 2-D rotation matrix, translated to `ship_.position`);

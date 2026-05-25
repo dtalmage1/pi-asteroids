@@ -9,19 +9,25 @@ Entries are promoted to **[FINAL]** when the feature is selected for development
 
 ### FR-1 Ship Movement
 
-**[OUTLINE]**
+**[FINAL]**
 
 - The ship has a position, a velocity, and an orientation (heading angle).
-- The player can rotate the ship left and right; rotation is instantaneous per input, not
-  velocity-based.
+- The player can rotate the ship left and right; rotation rate is constant while the button
+  is held (not velocity-based).
 - The player can apply thrust in the direction the ship is currently facing; thrust
   accumulates velocity (Newtonian).
 - Velocity decays over time (drag) so the ship slows to a stop when thrust is released.
 - The ship wraps around screen edges (exits one side, appears on the opposite side).
-- The ship's geometry is a simple wireframe triangle/chevron (classic arcade shape).
+- The ship's geometry is a simple wireframe chevron (4 vertices: nose, two wings, tail notch).
 
-*Parameters to finalise at feature selection: rotation rate (deg/frame), thrust
-acceleration, drag coefficient, max speed.*
+**Parameters (finalised at ENT-2):**
+
+| Parameter | Value | Notes |
+|-----------|-------|-------|
+| Rotation rate | 3.5 rad/s (~200 deg/s) | Held continuously |
+| Thrust acceleration | 200 pixels/s² | Applied each frame thrust held |
+| Drag coefficient | 0.5 | Applied every frame in Playing state |
+| Max speed | ~400 pixels/s | Natural terminal velocity from drag (accel/drag) |
 
 ---
 
@@ -670,6 +676,27 @@ unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAccele
 
 ---
 
+### IR-14 Ship Controls and Attract→Playing Transition **[FINAL]**
+
+**Acceptance criteria — all must pass before ENT-2 is Done:**
+
+1. `Game::update` transitions `GameState::Attract → GameState::Playing` on the first frame
+   `InputState::start` is true; resets ship to centre, zero velocity, zero angle, active=true
+2. Rotation: `rotateLeft` decreases `ship_.angle`; `rotateRight` increases it; angle is
+   wrapped to `[0, 2π)` each frame via `wrapAngle`
+3. Thrust: `InputState::thrust` calls `applyThrust(vel, angle, 200.0, dt)`;
+   `ship_.thrusting` is set to `input.thrust` each frame
+4. Drag, position integration, and screen-wrap applied every frame in Playing state
+   (unchanged from ENT-1; still applies when thrust is not held)
+5. Rotation and thrust inputs are ignored in Attract state
+6. Five new unit tests pass: `StartTransitionsToPlaying`, `RotateLeftDecreasesAngle`,
+   `RotateRightIncreasesAngle`, `ThrustAcceleratesShip`, `ThrustFlagTracksInput`
+7. 43/43 unit tests pass on host (MSVC/Ninja); zero clang-tidy findings
+8. 43/43 unit tests pass on RPi (GCC/Makefile); zero clang-tidy findings
+9. Visual: pressing START on the gamepad on RPi starts the game; ship steers and thrusts
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -718,3 +745,4 @@ unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAccele
 | IR-11 Physics helpers, Collision helper, Ship struct | **Final** |
 | IR-12 Sdl2Renderer drawLine and drawLineStrip | **Final** |
 | IR-13 Ship wireframe rendering | **Final** |
+| IR-14 Ship controls and Attract→Playing transition | **Final** |
