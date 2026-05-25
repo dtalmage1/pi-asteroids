@@ -559,6 +559,33 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-10 Game Class and State Machine Scaffold **[FINAL]**
+
+**Acceptance criteria — all must pass before CORE-5 is Done:**
+
+1. `src/game/Game.hpp` / `.cpp` define `class Game` in namespace `ast`:
+   - Constructor takes `IAudioSink& audio` and `Vec2 screenSize` — non-owning references
+   - Non-copyable, non-movable
+   - `update(float dt, const InputState& input)` — stub; no transitions yet
+   - `render(IRenderer& renderer) const` — stub; draws nothing yet
+   - `state() const noexcept` returns current `GameState`
+2. `enum class GameState` defined in `game/Game.hpp`: `Attract`, `Playing`, `PlayerDead`, `GameOver`
+3. `Game` starts in `GameState::Attract`; `state()` returns `Attract` immediately after construction
+4. `lib_game` retains no SDL2 or SDL2_mixer dependency
+5. `src/main.cpp` updated to wire all modules:
+   - Creates `Sdl2InputSource`, `Sdl2AudioSink`, and `Game` on the stack after `Platform` and `Sdl2Renderer`
+   - dt computed from `SDL_GetPerformanceCounter` difference between frames; capped at 50 ms
+   - Each tick: `inputSource.query()` → `game.update(dt, input)` → `renderer.clear` → `game.render(renderer)` → `renderer.present()`
+6. `cmake --build build` exits 0 on host (MSVC/Ninja) — zero clang-tidy findings
+7. `cmake --build build` exits 0 on RPi (GCC/ARM64/Makefile) — zero clang-tidy findings
+8. `ctest --output-on-failure` exits 0 on both host and RPi (19/19 tests passing)
+
+**Legitimate waivers for CORE-5:**
+- Integration test for `main.cpp` wiring: SDL2-dependent; manual test — run `./asteroids` on RPi,
+  confirm black window opens and closes cleanly; game loop calls update/render each tick
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -603,3 +630,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | IR-7 IInputSource interface and Sdl2InputSource stub | **Final** |
 | IR-8 IAudioSink interface, NullAudioSink, and Sdl2AudioSink stub | **Final** |
 | IR-9 Platform RAII and game loop | **Final** |
+| IR-10 Game class and state machine scaffold | **Final** |

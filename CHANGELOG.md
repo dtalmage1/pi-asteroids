@@ -8,6 +8,34 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- CORE-5: `Game` class; `GameState` enum (`Attract`, `Playing`, `PlayerDead`, `GameOver`);
+  state machine scaffold; `Game::update(dt, InputState)` and `Game::render(IRenderer&)` stubs;
+  `main.cpp` wired with `Sdl2InputSource`, `Sdl2AudioSink`, and `Game`; dt computed from
+  `SDL_GetPerformanceCounter` difference, capped at 50 ms; 3 new unit tests (19/19 passing).
+
+### Added
+- CORE-4: `Platform` RAII class (`SDL_Init`/`SDL_Quit`, `SDL_Window*` via `unique_ptr`);
+  60 Hz fixed-step game loop in `main.cpp`; `SDL_MAIN_HANDLED` prevents SDL redefining `main`
+  on Windows/MSVC; dt tracked from `SDL_GetPerformanceCounter`; `SDL_QUIT` event handling.
+  `SDL2::SDL2-static` added to `asteroids` executable (SDL2 include paths don't propagate
+  through PRIVATE-linked libs). Verified: zero clang-tidy findings and 16/16 tests on both
+  host (MSVC/Ninja) and RPi (GCC/ARM64/Makefile).
+
+### Added
+- CORE-3: `IAudioSink` pure interface (`play`, `loop`, `stop`, `isPlaying`) in `game/`
+  (no SDL2 dependency); `NullAudioSink` header-only no-op; `Sdl2AudioSink` stub
+  (`Mix_OpenAudio`/`Mix_CloseAudio` RAII, playback deferred to AUD-1); `MockAudioSink`
+  GoogleMock implementation. `SDL2::SDL2-static` added to `lib_audio` link to resolve
+  `SDL_stdinc.h` include path. 4 new unit tests (16/16 passing on both targets).
+
+### Added
+- CORE-2: `InputState` struct (7 bool fields, all default `false`); `IInputSource` pure
+  interface (`query() const`) in `game/` (no SDL2 dependency); `Sdl2InputSource` stub opens
+  joystick index 0 at startup; PiHut SNES button map hardcoded (D-pad + A/B/X/Start);
+  `connected` always `true` (hot-plug deferred to POL-1); `MockInputSource` GoogleMock
+  implementation. 3 new unit tests (12/12 passing on both targets).
+
+### Added
 - CORE-1: Foundation types (`Vec2`, `Colour`, `SoundId`) and `IRenderer` pure interface in
   `src/game/` (no SDL2 dependency); `Sdl2Renderer` stub in `src/rendering/` (`clear` +
   `present` functional, `drawLine`/`drawLineStrip` stubs for RND-1); `MockRenderer` via
