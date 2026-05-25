@@ -8,6 +8,13 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- ENT-6: Asteroid splitting on hit — Large→2 Medium, Medium→2 Small, Small→nothing;
+  `spawnChildren` helper rotates parent velocity ±30° and scales to at least 60 px/s
+  for each child; children appended to `asteroids_` after collision loop completes to
+  avoid iterator invalidation. `splitSeed_` counter in `Game` seeds child shapes.
+  4 new tests; 73/73 passing.
+
+### Added
 - ENT-5: Player projectile vs asteroid circle-circle collision; `checkCollisions()`
   private helper iterates active player projectiles against active asteroids using
   `circlesOverlap`; both deactivated on hit. `kProjectileRadius = 2.0F` constant added.

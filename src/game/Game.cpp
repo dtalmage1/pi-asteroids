@@ -15,6 +15,10 @@ constexpr float kProjectileLifetime = 0.75F;  // seconds
 constexpr float kShipNoseOffset     = 15.0F;  // pixels from ship centre to nose tip
 constexpr float kProjectileHalfLen  =  2.0F;  // half visual length of projectile line
 constexpr float kProjectileRadius   =  2.0F;  // collision radius (matches visual size)
+constexpr float kSplitAngle         =  0.5236F; // π/6 ≈ 30° divergence per child
+constexpr float kSplitSpeedMult     =  1.3F;    // children are 30% faster than parent
+constexpr float kSplitMinSpeed      = 60.0F;    // floor speed for stationary parent (pixels/s)
+constexpr float kSplitAngularMult   =  1.5F;    // children spin faster than parent
 } // namespace
 
 namespace ast {
@@ -42,6 +46,43 @@ std::vector<ast::Vec2> buildShipVertices(ast::Vec2 pos, float angle) {
         });
     }
     return verts;
+}
+
+std::vector<ast::Asteroid> spawnChildren(const ast::Asteroid& parent, uint32_t seed) {
+    if (parent.size == ast::AsteroidSize::Small) { return {}; }
+    const ast::AsteroidSize childSize = (parent.size == ast::AsteroidSize::Large)
+                                        ? ast::AsteroidSize::Medium
+                                        : ast::AsteroidSize::Small;
+    const float parentSpeed = parent.velocity.length();
+    const float childSpeed  = std::max((parentSpeed * kSplitSpeedMult), kSplitMinSpeed);
+    const ast::Vec2 dir = (parentSpeed > 0.0F)
+                          ? parent.velocity.normalised()
+                          : ast::Vec2{0.0F, -1.0F};
+    const float cosA = std::cos(kSplitAngle);
+    const float sinA = std::sin(kSplitAngle);
+    const ast::Vec2 vel1 = ast::Vec2{(dir.x * cosA) - (dir.y * sinA),
+                                      (dir.x * sinA) + (dir.y * cosA)} * childSpeed;
+    const ast::Vec2 vel2 = ast::Vec2{(dir.x * cosA) + (dir.y * sinA),
+                                     -(dir.x * sinA) + (dir.y * cosA)} * childSpeed;
+    std::vector<ast::Asteroid> children;
+    children.reserve(2);
+    ast::Asteroid c0;
+    c0.position   = parent.position;
+    c0.velocity   = vel1;
+    c0.angularVel = parent.angularVel * kSplitAngularMult;
+    c0.size       = childSize;
+    c0.shape      = ast::generateAsteroidShape(childSize, 10, seed);
+    c0.active     = true;
+    children.push_back(std::move(c0));
+    ast::Asteroid c1;
+    c1.position   = parent.position;
+    c1.velocity   = vel2;
+    c1.angularVel = parent.angularVel * kSplitAngularMult;
+    c1.size       = childSize;
+    c1.shape      = ast::generateAsteroidShape(childSize, 10, seed + 1U);
+    c1.active     = true;
+    children.push_back(std::move(c1));
+    return children;
 }
 
 std::vector<ast::Vec2> buildAsteroidVertices(const ast::Asteroid& rock) {
@@ -132,18 +173,23 @@ void Game::tryFire(const InputState& input) {
 }
 
 void Game::checkCollisions() {
+    std::vector<Asteroid> spawned;
     for (auto& p : projectiles_) {
         if (!p.active || p.owner != ProjectileOwner::Player) { continue; }
         for (auto& rock : asteroids_) {
             if (!rock.active) { continue; }
             if (circlesOverlap(p.position, kProjectileRadius,
                                rock.position, Asteroid::radius(rock.size))) {
-                p.active    = false;
-                rock.active = false;
+                p.active      = false;
+                auto children = spawnChildren(rock, splitSeed_);
+                splitSeed_   += 2U;
+                for (auto& child : children) { spawned.push_back(std::move(child)); }
+                rock.active   = false;
                 break;
             }
         }
     }
+    for (auto& a : spawned) { asteroids_.push_back(std::move(a)); }
 }
 
 void Game::spawnAsteroid(Asteroid a) {

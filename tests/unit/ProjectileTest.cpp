@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <vector>
 #include "game/entities/Projectile.hpp"
 #include "game/Game.hpp"
 #include "MockAudioSink.hpp"
@@ -180,6 +181,116 @@ TEST(Game, RenderSkipsInactiveProjectiles) {
 }
 
 // --- ENT-5: projectile vs asteroid collision ---
+
+// --- ENT-6: asteroid splitting ---
+
+// Destroying a Large asteroid spawns 2 active Medium children.
+TEST(Game, LargeAsteroidSplitsIntoTwoMedium) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::Asteroid rock;
+    rock.position = {400.0F, 150.0F};
+    rock.size     = ast::AsteroidSize::Large;
+    rock.shape    = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 1);
+    rock.active   = true;
+    game.spawnAsteroid(rock);
+
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    game.update(1.0F / 60.0F, fireInput);
+    const ast::InputState noInput;
+    for (int i = 0; i < 25; ++i) { game.update(1.0F / 60.0F, noInput); }
+
+    int mediumCount = 0;
+    for (const auto& a : game.asteroids()) {
+        if (a.active && a.size == ast::AsteroidSize::Medium) { ++mediumCount; }
+    }
+    EXPECT_EQ(mediumCount, 2);
+}
+
+// Destroying a Medium asteroid spawns 2 active Small children.
+TEST(Game, MediumAsteroidSplitsIntoTwoSmall) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::Asteroid rock;
+    rock.position = {400.0F, 150.0F};
+    rock.size     = ast::AsteroidSize::Medium;
+    rock.shape    = ast::generateAsteroidShape(ast::AsteroidSize::Medium, 10, 1);
+    rock.active   = true;
+    game.spawnAsteroid(rock);
+
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    game.update(1.0F / 60.0F, fireInput);
+    const ast::InputState noInput;
+    for (int i = 0; i < 25; ++i) { game.update(1.0F / 60.0F, noInput); }
+
+    int smallCount = 0;
+    for (const auto& a : game.asteroids()) {
+        if (a.active && a.size == ast::AsteroidSize::Small) { ++smallCount; }
+    }
+    EXPECT_EQ(smallCount, 2);
+}
+
+// Destroying a Small asteroid spawns no children.
+TEST(Game, SmallAsteroidDoesNotSplit) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::Asteroid rock;
+    rock.position = {400.0F, 150.0F};
+    rock.size     = ast::AsteroidSize::Small;
+    rock.shape    = ast::generateAsteroidShape(ast::AsteroidSize::Small, 10, 1);
+    rock.active   = true;
+    game.spawnAsteroid(rock);
+
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    game.update(1.0F / 60.0F, fireInput);
+    const ast::InputState noInput;
+    for (int i = 0; i < 25; ++i) { game.update(1.0F / 60.0F, noInput); }
+
+    int activeCount = 0;
+    for (const auto& a : game.asteroids()) {
+        if (a.active) { ++activeCount; }
+    }
+    EXPECT_EQ(activeCount, 0);
+}
+
+// Split children travel in different directions.
+TEST(Game, SplitChildrenDiverge) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::Asteroid rock;
+    rock.position = {400.0F, 150.0F};
+    rock.velocity = {0.0F, 50.0F}; // moving downward — children diverge left/right
+    rock.size     = ast::AsteroidSize::Large;
+    rock.shape    = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 1);
+    rock.active   = true;
+    game.spawnAsteroid(rock);
+
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    game.update(1.0F / 60.0F, fireInput);
+    const ast::InputState noInput;
+    for (int i = 0; i < 25; ++i) { game.update(1.0F / 60.0F, noInput); }
+
+    std::vector<float> xVels;
+    for (const auto& a : game.asteroids()) {
+        if (a.active && a.size == ast::AsteroidSize::Medium) {
+            xVels.push_back(a.velocity.x);
+        }
+    }
+    ASSERT_EQ(xVels.size(), 2U);
+    EXPECT_NE(xVels[0], xVels[1]);
+}
 
 // A projectile travelling into an asteroid deactivates both.
 TEST(Game, ProjectileDestroysAsteroidOnHit) {
