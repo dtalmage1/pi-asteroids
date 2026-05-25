@@ -8,6 +8,12 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- GAME-1: Scoring — `score()` accessor on `Game`; `score_` incremented in
+  `checkCollisions()` via `asteroidScore()` helper (Large=20, Medium=50, Small=100 pts);
+  `kScoreLarge/Medium/Small` constexpr constants; score starts at zero and accumulates
+  across hits. 5 new tests; 82/82 passing.
+
+### Added
 - ENT-7: Ship–asteroid circle-circle collision; `checkShipCollisions()` private helper
   checks active asteroids against ship when state is Playing and `invincTimer == 0`;
   on hit: `ship_.active = false`, state → `PlayerDead`; asteroid survives.
