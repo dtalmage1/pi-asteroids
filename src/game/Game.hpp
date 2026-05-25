@@ -35,6 +35,7 @@ public:
 private:
     void tryFire(const InputState& input);
     void checkCollisions();
+    void checkShipCollisions();
 
     IAudioSink&           audio_;
     Vec2                  screenSize_;

@@ -8,6 +8,12 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- ENT-7: Ship–asteroid circle-circle collision; `checkShipCollisions()` private helper
+  checks active asteroids against ship when state is Playing and `invincTimer == 0`;
+  on hit: `ship_.active = false`, state → `PlayerDead`; asteroid survives.
+  4 new tests; 77/77 passing.
+
+### Added
 - ENT-6: Asteroid splitting on hit — Large→2 Medium, Medium→2 Small, Small→nothing;
   `spawnChildren` helper rotates parent velocity ±30° and scales to at least 60 px/s
   for each child; children appended to `asteroids_` after collision loop completes to
