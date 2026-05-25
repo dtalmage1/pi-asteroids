@@ -2,6 +2,7 @@
 #include "game/entities/Projectile.hpp"
 #include "game/Game.hpp"
 #include "MockAudioSink.hpp"
+#include "MockRenderer.hpp"
 
 namespace {
 void startGame(ast::Game& game) {
@@ -147,4 +148,33 @@ TEST(Game, FireSlotReusedAfterExpiry) {
         if (p.active) { anyActive = true; break; }
     }
     EXPECT_TRUE(anyActive);
+}
+
+// --- RND-4: projectile rendering ---
+
+// Active projectile is drawn as a line segment.
+TEST(Game, RenderDrawsActiveProjectile) {
+    ast::MockAudioSink audio;
+    ast::MockRenderer  renderer;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::InputState fireInput;
+    fireInput.fire = true;
+    game.update(1.0F / 60.0F, fireInput);
+
+    EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, true)).Times(1); // ship
+    EXPECT_CALL(renderer, drawLine(testing::_, testing::_, testing::_)).Times(1); // projectile
+    game.render(renderer);
+}
+
+// No drawLine call when no projectiles are active.
+TEST(Game, RenderSkipsInactiveProjectiles) {
+    ast::MockAudioSink audio;
+    ast::MockRenderer  renderer;
+    ast::Game game(audio, {800.0F, 600.0F});
+
+    EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, true)).Times(1); // ship only
+    // drawLine must NOT be called — MockRenderer fails on unexpected calls
+    game.render(renderer);
 }

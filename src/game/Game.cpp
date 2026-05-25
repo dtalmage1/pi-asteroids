@@ -13,6 +13,7 @@ constexpr float kThrustAccel        = 200.0F; // pixels/s²
 constexpr float kProjectileSpeed    = 500.0F; // pixels/s
 constexpr float kProjectileLifetime = 0.75F;  // seconds
 constexpr float kShipNoseOffset     = 15.0F;  // pixels from ship centre to nose tip
+constexpr float kProjectileHalfLen  =  2.0F;  // half visual length of projectile line
 } // namespace
 
 namespace ast {
@@ -147,6 +148,15 @@ void Game::render(IRenderer& renderer) const {
             buildAsteroidVertices(rock),
             Colour{255, 255, 255, 255},
             true);
+    }
+    for (const auto& p : projectiles_) {
+        if (!p.active) { continue; }
+        const Vec2 dir = p.velocity.normalised();
+        const Vec2 a{p.position.x - (dir.x * kProjectileHalfLen),
+                     p.position.y - (dir.y * kProjectileHalfLen)};
+        const Vec2 b{p.position.x + (dir.x * kProjectileHalfLen),
+                     p.position.y + (dir.y * kProjectileHalfLen)};
+        renderer.drawLine(a, b, Colour{255, 255, 255, 255});
     }
 }
 
