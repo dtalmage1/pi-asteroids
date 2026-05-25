@@ -29,8 +29,8 @@ std::vector<ast::Vec2> buildShipVertices(ast::Vec2 pos, float angle) {
     verts.reserve(kShipShape.size());
     for (const auto& v : kShipShape) {
         verts.push_back({
-            pos.x + v.x * cosA - v.y * sinA,
-            pos.y + v.x * sinA + v.y * cosA
+            pos.x + (v.x * cosA) - (v.y * sinA),
+            pos.y + (v.x * sinA) + (v.y * cosA)
         });
     }
     return verts;
