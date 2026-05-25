@@ -154,6 +154,7 @@ void Game::update(float dt, const InputState& input) {
     }
 
     checkCollisions();
+    checkShipCollisions();
 }
 
 void Game::tryFire(const InputState& input) {
@@ -190,6 +191,20 @@ void Game::checkCollisions() {
         }
     }
     for (auto& a : spawned) { asteroids_.push_back(std::move(a)); }
+}
+
+void Game::checkShipCollisions() {
+    if (state_ != GameState::Playing) { return; }
+    if (!ship_.active || ship_.invincTimer > 0.0F) { return; }
+    for (const auto& rock : asteroids_) {
+        if (!rock.active) { continue; }
+        if (circlesOverlap(ship_.position, Ship::kRadius,
+                           rock.position, Asteroid::radius(rock.size))) {
+            ship_.active = false;
+            state_       = GameState::PlayerDead;
+            return;
+        }
+    }
 }
 
 void Game::spawnAsteroid(Asteroid a) {

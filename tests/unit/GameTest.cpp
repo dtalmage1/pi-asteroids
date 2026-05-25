@@ -3,6 +3,14 @@
 #include "MockAudioSink.hpp"
 #include "MockRenderer.hpp"
 
+namespace {
+void startGame(ast::Game& game) {
+    ast::InputState input;
+    input.start = true;
+    game.update(1.0F / 60.0F, input);
+}
+} // namespace
+
 // Game starts in Attract state immediately after construction.
 TEST(Game, StartsInAttract) {
     ast::MockAudioSink audio;
@@ -102,4 +110,82 @@ TEST(Game, ThrustFlagTracksInput) {
     ast::InputState thrustOff;
     game.update(1.0F / 60.0F, thrustOff);
     EXPECT_FALSE(game.ship().thrusting);
+}
+
+// --- ENT-7: ship-asteroid collision ---
+
+// Ship is deactivated when it overlaps an active asteroid.
+TEST(Game, ShipCollidesWithAsteroidDeactivatesShip) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game); // ship at (400, 300), Playing
+
+    ast::Asteroid rock;
+    rock.position = {400.0F, 300.0F}; // on top of ship — guaranteed overlap
+    rock.size     = ast::AsteroidSize::Large;
+    rock.shape    = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 1);
+    rock.active   = true;
+    game.spawnAsteroid(rock);
+
+    const ast::InputState noInput;
+    game.update(1.0F / 60.0F, noInput);
+
+    EXPECT_FALSE(game.ship().active);
+}
+
+// State transitions to PlayerDead when the ship hits an asteroid.
+TEST(Game, ShipCollisionTransitionsToPlayerDead) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::Asteroid rock;
+    rock.position = {400.0F, 300.0F};
+    rock.size     = ast::AsteroidSize::Large;
+    rock.shape    = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 1);
+    rock.active   = true;
+    game.spawnAsteroid(rock);
+
+    const ast::InputState noInput;
+    game.update(1.0F / 60.0F, noInput);
+
+    EXPECT_EQ(game.state(), ast::GameState::PlayerDead);
+}
+
+// Asteroid remains active after the ship collides with it.
+TEST(Game, AsteroidSurvivesShipCollision) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    ast::Asteroid rock;
+    rock.position = {400.0F, 300.0F};
+    rock.size     = ast::AsteroidSize::Large;
+    rock.shape    = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 1);
+    rock.active   = true;
+    game.spawnAsteroid(rock);
+
+    const ast::InputState noInput;
+    game.update(1.0F / 60.0F, noInput);
+
+    EXPECT_TRUE(game.asteroids().front().active);
+}
+
+// Ship-asteroid overlap in Attract state does not trigger destruction.
+TEST(Game, ShipCollisionIgnoredInAttract) {
+    ast::MockAudioSink audio;
+    ast::Game game(audio, {800.0F, 600.0F}); // Attract state
+
+    ast::Asteroid rock;
+    rock.position = {400.0F, 300.0F}; // ship centre
+    rock.size     = ast::AsteroidSize::Large;
+    rock.shape    = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 1);
+    rock.active   = true;
+    game.spawnAsteroid(rock);
+
+    const ast::InputState noInput;
+    game.update(1.0F / 60.0F, noInput);
+
+    EXPECT_TRUE(game.ship().active);
+    EXPECT_EQ(game.state(), ast::GameState::Attract);
 }
