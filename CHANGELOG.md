@@ -8,6 +8,12 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- ENT-5: Player projectile vs asteroid circle-circle collision; `checkCollisions()`
+  private helper iterates active player projectiles against active asteroids using
+  `circlesOverlap`; both deactivated on hit. `kProjectileRadius = 2.0F` constant added.
+  2 new tests; 69/69 passing.
+
+### Added
 - RND-4: Active projectile rendered as a short line segment (4px total, centred on
   `position`, oriented along normalised velocity) via `IRenderer::drawLine`;
   inactive projectiles skipped. 2 new tests; 67/67 passing.

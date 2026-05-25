@@ -1,5 +1,6 @@
 #include "game/Game.hpp"
 #include "game/Colour.hpp"
+#include "game/physics/Collision.hpp"
 #include "game/physics/Physics.hpp"
 #include <array>
 #include <cmath>
@@ -13,6 +14,7 @@ constexpr float kProjectileSpeed    = 500.0F; // pixels/s
 constexpr float kProjectileLifetime = 0.75F;  // seconds
 constexpr float kShipNoseOffset     = 15.0F;  // pixels from ship centre to nose tip
 constexpr float kProjectileHalfLen  =  2.0F;  // half visual length of projectile line
+constexpr float kProjectileRadius   =  2.0F;  // collision radius (matches visual size)
 } // namespace
 
 namespace ast {
@@ -109,6 +111,8 @@ void Game::update(float dt, const InputState& input) {
         rock.position = integratePosition(rock.position, rock.velocity, dt);
         rock.position = wrapPosition(rock.position, screenSize_);
     }
+
+    checkCollisions();
 }
 
 void Game::tryFire(const InputState& input) {
@@ -124,6 +128,21 @@ void Game::tryFire(const InputState& input) {
         slot->lifetime = kProjectileLifetime;
         slot->owner    = ProjectileOwner::Player;
         slot->active   = true;
+    }
+}
+
+void Game::checkCollisions() {
+    for (auto& p : projectiles_) {
+        if (!p.active || p.owner != ProjectileOwner::Player) { continue; }
+        for (auto& rock : asteroids_) {
+            if (!rock.active) { continue; }
+            if (circlesOverlap(p.position, kProjectileRadius,
+                               rock.position, Asteroid::radius(rock.size))) {
+                p.active    = false;
+                rock.active = false;
+                break;
+            }
+        }
     }
 }
 
