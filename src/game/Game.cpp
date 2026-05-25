@@ -49,6 +49,9 @@ constexpr float kAttractTitleCharHeightFrac  = 0.10F;
 constexpr float kAttractTitleYFrac           = 0.30F;
 constexpr float kAttractPromptCharHeightFrac = 0.05F;
 constexpr float kAttractPromptYFrac          = 0.55F;
+constexpr float kAttractScoreCharHeightFrac  = 0.04F;
+constexpr float kAttractScoreStartYFrac      = 0.65F;
+constexpr float kAttractScoreLineHeightFrac  = 0.06F;
 constexpr float kHudMargin             = 10.0F;   // pixels from screen edge to HUD elements
 constexpr float kHudCharHeightFrac     =  0.04F;  // score digit height as fraction of screen height
 constexpr float kShipIconSpan          = 24.0F;   // kShipShape vertical extent: nose(-15) to tail(+9)
@@ -173,6 +176,7 @@ void Game::update(float dt, const InputState& input) {
     }
 
     if (state_ == GameState::GameOver && input.start) {
+        scoreTable_.submit(score_);
         state_ = GameState::Attract;
     }
 
@@ -354,6 +358,7 @@ void Game::tickGameOver(float dt) {
     if (state_ != GameState::GameOver) { return; }
     gameOverTimer_ -= dt;
     if (gameOverTimer_ <= 0.0F) {
+        scoreTable_.submit(score_);
         state_ = GameState::Attract;
     }
 }
@@ -434,6 +439,18 @@ void Game::render(IRenderer& renderer) const {
         drawString(renderer,
                    Vec2{((screenSize_.x - promptW) * 0.5F), (screenSize_.y * kAttractPromptYFrac)},
                    promptCharH, "PRESS START", Colour{255, 255, 255, 255});
+
+        const float scoreCharH = screenSize_.y * kAttractScoreCharHeightFrac;
+        const float scoreLineH = screenSize_.y * kAttractScoreLineHeightFrac;
+        for (std::size_t i = 0U; i < scoreTable_.count(); ++i) {
+            const std::string s = std::to_string(scoreTable_.entry(i));
+            const float       w = stringWidth(scoreCharH, s);
+            const float       y = (screenSize_.y * kAttractScoreStartYFrac) +
+                                  (static_cast<float>(i) * scoreLineH);
+            drawString(renderer,
+                       Vec2{((screenSize_.x - w) * 0.5F), y},
+                       scoreCharH, s, Colour{255, 255, 255, 255});
+        }
     }
 
     if (state_ == GameState::GameOver) {
@@ -511,6 +528,8 @@ void Game::startWave() {
 }
 
 GameState Game::state() const noexcept { return state_; }
+
+const ScoreTable& Game::scoreTable() const noexcept { return scoreTable_; }
 
 const Ship& Game::ship() const noexcept { return ship_; }
 

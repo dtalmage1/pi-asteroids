@@ -2,6 +2,7 @@
 #include "game/IAudioSink.hpp"
 #include "game/IRenderer.hpp"
 #include "game/InputState.hpp"
+#include "game/ScoreTable.hpp"
 #include "game/Vec2.hpp"
 #include "game/entities/Asteroid.hpp"
 #include "game/entities/Particle.hpp"
@@ -36,6 +37,7 @@ public:
     const std::vector<Asteroid>& asteroids() const noexcept;
     const std::array<Projectile, kMaxProjectiles>& projectiles() const noexcept;
     const std::array<Particle,   kMaxParticles>&   particles()   const noexcept;
+    const ScoreTable& scoreTable() const noexcept;
 
 private:
     void tryFire(const InputState& input);
@@ -51,6 +53,7 @@ private:
     IAudioSink&           audio_;
     Vec2                  screenSize_;
     GameState             state_          = GameState::Attract;
+    ScoreTable            scoreTable_;
     Ship                  ship_;
     std::vector<Asteroid> asteroids_;
     std::array<Projectile, kMaxProjectiles> projectiles_{};
