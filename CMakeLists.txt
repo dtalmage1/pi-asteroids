@@ -87,7 +87,7 @@ endforeach()
 if(NOT SDL2MIXER_TARGET)
     message(FATAL_ERROR "Could not find a linkable SDL2_mixer target")
 endif()
-target_link_libraries(lib_audio PRIVATE ${SDL2MIXER_TARGET})
+target_link_libraries(lib_audio PRIVATE ${SDL2MIXER_TARGET} SDL2::SDL2-static)
 
 # ── Executable ────────────────────────────────────────────────────────────────
 add_executable(asteroids src/main.cpp)

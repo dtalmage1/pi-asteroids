@@ -13,6 +13,7 @@ add_executable(unit_tests
     unit/placeholder_test.cpp
     unit/Vec2Test.cpp
     unit/InputStateTest.cpp
+    unit/AudioSinkTest.cpp
 )
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 target_link_libraries(unit_tests PRIVATE
