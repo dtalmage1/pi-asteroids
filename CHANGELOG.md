@@ -8,6 +8,14 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- GAME-4: GameOver state — `tickGameOver()` decrements `gameOverTimer_` (5 s);
+  state auto-transitions to `Attract` when timer expires; pressing START transitions
+  immediately; `render()` overlays "GAME OVER" (centred, 8% screen height) and final
+  score (centred, 5% screen height); `Glyph.hpp`/`Glyph.cpp` stroke font added
+  (`drawString`, `stringWidth`; digits 0–9, letters A/E/G/M/O/R/V); score and lives
+  reset on new game start from `Attract`. 12 new tests; 113/113 passing.
+
+### Added
 - GAME-3: Lives system — 3 lives per game; `lives_` decremented on ship death;
   `respawnTimer_` (3 s) drives `tickRespawn()`: expired lives → `GameOver`, remaining
   lives → `Playing` with `invincTimer` (3 s) set; ship flashes while invincible via

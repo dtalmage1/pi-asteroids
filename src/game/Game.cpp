@@ -1,5 +1,6 @@
 #include "game/Game.hpp"
 #include "game/Colour.hpp"
+#include "game/Glyph.hpp"
 #include "game/Wave.hpp"
 #include "game/physics/Collision.hpp"
 #include "game/physics/Physics.hpp"
@@ -7,6 +8,7 @@
 #include <array>
 #include <cmath>
 #include <random>
+#include <string>
 #include <vector>
 
 namespace {
@@ -35,6 +37,7 @@ constexpr float kRespawnDelay          =  3.0F;   // seconds before ship respawn
 constexpr float kInvincDuration        =  3.0F;   // seconds of invincibility after respawn
 constexpr int   kExtraLifeScore        = 10000;
 constexpr float kFlashPeriod           =  0.1F;   // half-period of ship flash while invincible
+constexpr float kGameOverDelay         =  5.0F;   // seconds before auto-returning to Attract
 } // namespace
 
 namespace ast {
@@ -149,6 +152,10 @@ void Game::update(float dt, const InputState& input) {
         nextExtraLifeScore_ = kExtraLifeScore;
     }
 
+    if (state_ == GameState::GameOver && input.start) {
+        state_ = GameState::Attract;
+    }
+
     if (state_ == GameState::Playing && ship_.active) {
         if (input.rotateLeft)  { ship_.angle -= kRotationRate * dt; }
         if (input.rotateRight) { ship_.angle += kRotationRate * dt; }
@@ -190,6 +197,7 @@ void Game::update(float dt, const InputState& input) {
     checkShipCollisions();
     tickWave(dt);
     tickRespawn(dt);
+    tickGameOver(dt);
 }
 
 void Game::tryFire(const InputState& input) {
@@ -266,7 +274,8 @@ void Game::tickRespawn(float dt) {
     respawnTimer_ -= dt;
     if (respawnTimer_ <= 0.0F) {
         if (lives_ <= 0) {
-            state_ = GameState::GameOver;
+            state_          = GameState::GameOver;
+            gameOverTimer_  = kGameOverDelay;
         } else {
             state_            = GameState::Playing;
             ship_.position    = {screenSize_.x / 2.0F, screenSize_.y / 2.0F};
@@ -275,6 +284,14 @@ void Game::tickRespawn(float dt) {
             ship_.invincTimer = kInvincDuration;
             ship_.active      = true;
         }
+    }
+}
+
+void Game::tickGameOver(float dt) {
+    if (state_ != GameState::GameOver) { return; }
+    gameOverTimer_ -= dt;
+    if (gameOverTimer_ <= 0.0F) {
+        state_ = GameState::Attract;
     }
 }
 
@@ -305,6 +322,21 @@ void Game::render(IRenderer& renderer) const {
         const Vec2 b{p.position.x + (dir.x * kProjectileHalfLen),
                      p.position.y + (dir.y * kProjectileHalfLen)};
         renderer.drawLine(a, b, Colour{255, 255, 255, 255});
+    }
+
+    if (state_ == GameState::GameOver) {
+        const float charH     = screenSize_.y * 0.08F;
+        const float goW       = stringWidth(charH, "GAME OVER");
+        drawString(renderer,
+                   Vec2{((screenSize_.x - goW) * 0.5F), (screenSize_.y * 0.35F)},
+                   charH, "GAME OVER", Colour{255, 255, 255, 255});
+
+        const float scoreCharH = screenSize_.y * 0.05F;
+        const std::string scoreStr = std::to_string(score_);
+        const float scoreW = stringWidth(scoreCharH, scoreStr);
+        drawString(renderer,
+                   Vec2{((screenSize_.x - scoreW) * 0.5F), (screenSize_.y * 0.52F)},
+                   scoreCharH, scoreStr, Colour{255, 255, 255, 255});
     }
 }
 

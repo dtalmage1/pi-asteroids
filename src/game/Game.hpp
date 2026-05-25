@@ -42,6 +42,7 @@ private:
     void tickWave(float dt);
     void startWave();
     void tickRespawn(float dt);
+    void tickGameOver(float dt);
 
     IAudioSink&           audio_;
     Vec2                  screenSize_;
@@ -58,6 +59,7 @@ private:
     int                   lives_              = 0;
     float                 respawnTimer_       = 0.0F;
     int                   nextExtraLifeScore_ = 0;
+    float                 gameOverTimer_      = 0.0F;
 };
 
 } // namespace ast

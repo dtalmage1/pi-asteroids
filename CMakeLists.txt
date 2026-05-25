@@ -47,6 +47,7 @@ FetchContent_MakeAvailable(SDL2_mixer)
 # All game logic lives here so it can be unit-tested without SDL2 present.
 add_library(lib_game STATIC
     src/game/Game.cpp
+    src/game/Glyph.cpp
     src/game/Wave.cpp
     src/game/entities/Asteroid.cpp
 )
