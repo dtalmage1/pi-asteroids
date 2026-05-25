@@ -586,6 +586,46 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-11 Physics Helpers, Collision Helper, and Ship Struct **[FINAL]**
+
+**Acceptance criteria — all must pass before ENT-1 is Done:**
+
+1. `src/game/physics/Physics.hpp` defines the following `inline` free functions in namespace `ast`
+   (no SDL2 dependency; header-only):
+   - `integratePosition(Vec2 pos, Vec2 vel, float dt) → Vec2` — returns `pos + vel * dt`
+   - `applyThrust(Vec2 vel, float angle, float accel, float dt) → Vec2` — adds
+     `Vec2(sinf(angle), -cosf(angle)) * accel * dt` to vel; angle=0 points up (screen −Y);
+     increases clockwise
+   - `applyDrag(Vec2 vel, float drag, float dt) → Vec2` — multiplies vel by
+     `max(0, 1 − drag * dt)`; drag is fraction-per-second; clamps to zero, never reverses
+   - `wrapPosition(Vec2 pos, Vec2 screenSize) → Vec2` — wraps pos into `[0, screenSize)` on
+     each axis using `fmod`
+   - `wrapAngle(float angle) → float` — keeps angle in `[0, 2π)` using `fmod`
+2. `src/game/physics/Collision.hpp` defines `circlesOverlap(Vec2, float, Vec2, float) → bool`
+   in namespace `ast`: returns `true` iff `distance(a, b) < aRadius + bRadius` (strict less-than)
+3. `src/game/entities/Ship.hpp` defines `struct Ship` in namespace `ast`:
+   - Fields: `Vec2 position{}`, `Vec2 velocity{}`, `float angle = 0.0F`,
+     `float invincTimer = 0.0F`, `bool thrusting = false`, `bool active = true`
+   - `static constexpr float kRadius = 10.0F`
+4. `Game::update()` applies ship drift when `state_ == Playing && ship_.active`:
+   applyDrag → integratePosition → wrapPosition; decrements `invincTimer` when positive
+5. `Game::ship() const noexcept` exposes a const reference to the ship for inspection
+6. `lib_game` retains no SDL2 or SDL2_mixer dependency
+7. `cmake --build build` exits 0 on host (MSVC/Ninja) — zero clang-tidy findings
+8. `cmake --build build` exits 0 on RPi (GCC/ARM64/Makefile) — zero clang-tidy findings
+9. `ctest --output-on-failure` exits 0 on both host and RPi (37 tests total)
+
+**Parameter values (finalised for ENT-1):**
+- `kShipDrag = 0.5F` (anonymous namespace in Game.cpp) — ship retains ~60% speed per second;
+  tunable in ENT-2 once interactive
+
+**Architecture correction:** thrust vector formula in `docs/architecture.md` corrected from
+`Vec2(-sinf(angle), -cosf(angle))` to `Vec2(sinf(angle), -cosf(angle))`. Previous formula
+was inconsistent with "angles increase clockwise" convention; corrected formula verified by
+unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAcceleratesRight`.
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -631,3 +671,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | IR-8 IAudioSink interface, NullAudioSink, and Sdl2AudioSink stub | **Final** |
 | IR-9 Platform RAII and game loop | **Final** |
 | IR-10 Game class and state machine scaffold | **Final** |
+| IR-11 Physics helpers, Collision helper, Ship struct | **Final** |
