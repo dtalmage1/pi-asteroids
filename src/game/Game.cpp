@@ -1,14 +1,18 @@
 #include "game/Game.hpp"
 #include "game/Colour.hpp"
 #include "game/physics/Physics.hpp"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <vector>
 
 namespace {
-constexpr float kShipDrag     = 0.5F;
-constexpr float kRotationRate = 3.5F;   // rad/s (~200 deg/s)
-constexpr float kThrustAccel  = 200.0F; // pixels/s²
+constexpr float kShipDrag           = 0.5F;
+constexpr float kRotationRate       = 3.5F;   // rad/s (~200 deg/s)
+constexpr float kThrustAccel        = 200.0F; // pixels/s²
+constexpr float kProjectileSpeed    = 500.0F; // pixels/s
+constexpr float kProjectileLifetime = 0.75F;  // seconds
+constexpr float kShipNoseOffset     = 15.0F;  // pixels from ship centre to nose tip
 } // namespace
 
 namespace ast {
@@ -84,6 +88,30 @@ void Game::update(float dt, const InputState& input) {
         ship_.position = wrapPosition(ship_.position, screenSize_);
 
         if (ship_.invincTimer > 0.0F) { ship_.invincTimer -= dt; }
+
+        if (input.fire) {
+            auto it = std::find_if(projectiles_.begin(), projectiles_.end(),
+                [](const Projectile& p) { return !p.active; });
+            if (it != projectiles_.end()) {
+                const Vec2 nose{std::sin(ship_.angle), -std::cos(ship_.angle)};
+                it->position = ship_.position + (nose * kShipNoseOffset);
+                it->velocity = ship_.velocity + (nose * kProjectileSpeed);
+                it->lifetime = kProjectileLifetime;
+                it->owner    = ProjectileOwner::Player;
+                it->active   = true;
+            }
+        }
+    }
+
+    for (auto& p : projectiles_) {
+        if (!p.active) { continue; }
+        p.lifetime -= dt;
+        if (p.lifetime <= 0.0F) {
+            p.active = false;
+            continue;
+        }
+        p.position = integratePosition(p.position, p.velocity, dt);
+        p.position = wrapPosition(p.position, screenSize_);
     }
 
     for (auto& rock : asteroids_) {
@@ -100,6 +128,10 @@ void Game::spawnAsteroid(Asteroid a) {
 
 const std::vector<Asteroid>& Game::asteroids() const noexcept {
     return asteroids_;
+}
+
+const std::array<Projectile, kMaxProjectiles>& Game::projectiles() const noexcept {
+    return projectiles_;
 }
 
 void Game::render(IRenderer& renderer) const {

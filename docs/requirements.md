@@ -767,3 +767,5 @@ unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAccele
 | IR-13 Ship wireframe rendering | **Final** |
 | IR-14 Ship controls and Attract→Playing transition | **Final** |
 | IR-15 Asteroid struct and shape generation | **Final** |
+| IR-16 Asteroid wireframe rendering | **Final** |
+| IR-17 Projectile struct, firing, and lifetime | **Final** |

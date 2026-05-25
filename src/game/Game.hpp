@@ -4,7 +4,9 @@
 #include "game/InputState.hpp"
 #include "game/Vec2.hpp"
 #include "game/entities/Asteroid.hpp"
+#include "game/entities/Projectile.hpp"
 #include "game/entities/Ship.hpp"
+#include <array>
 #include <vector>
 
 namespace ast {
@@ -27,13 +29,15 @@ public:
 
     void spawnAsteroid(Asteroid a);
     const std::vector<Asteroid>& asteroids() const noexcept;
+    const std::array<Projectile, kMaxProjectiles>& projectiles() const noexcept;
 
 private:
-    IAudioSink&          audio_;
-    Vec2                 screenSize_;
-    GameState            state_ = GameState::Attract;
-    Ship                 ship_;
+    IAudioSink&           audio_;
+    Vec2                  screenSize_;
+    GameState             state_ = GameState::Attract;
+    Ship                  ship_;
     std::vector<Asteroid> asteroids_;
+    std::array<Projectile, kMaxProjectiles> projectiles_{};
 };
 
 } // namespace ast

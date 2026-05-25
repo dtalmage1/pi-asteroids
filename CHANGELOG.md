@@ -8,6 +8,14 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- ENT-4: `ProjectileOwner` enum (`Player`/`Saucer`); `Projectile` struct (position,
+  velocity, lifetime, owner, active); `kMaxProjectiles=4` constexpr; `Game::projectiles()`
+  accessor; firing from nose tip (`ship.position + nose * 15px`) on `InputState::fire`
+  when Playing and a free slot exists; projectile update loop decrements lifetime and
+  deactivates expired shots; position integrated and wrapped each frame.
+  8 new tests; 65/65 passing.
+
+### Added
 - ENT-3: `AsteroidSize` enum (`Large`/`Medium`/`Small`); `Asteroid` struct (position,
   velocity, angle, angularVel, size, shape, active; radii 48/24/12 px);
   `generateAsteroidShape(size, vertices, seed)` — seeded `std::minstd_rand`, ±20% jitter,
