@@ -28,6 +28,7 @@ add_executable(unit_tests
     unit/AttractTest.cpp
     unit/ParticleTest.cpp
     unit/ScoreTableTest.cpp
+    unit/HyperspaceTest.cpp
 )
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 target_link_libraries(unit_tests PRIVATE
