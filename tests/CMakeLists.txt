@@ -21,6 +21,7 @@ add_executable(unit_tests
     unit/AsteroidTest.cpp
     unit/ProjectileTest.cpp
     unit/ScoreTest.cpp
+    unit/WaveTest.cpp
 )
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 target_link_libraries(unit_tests PRIVATE

@@ -8,6 +8,12 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- GAME-2: Wave management — `waveAsteroidCount(wave)` free function (4→6→8→10→11 cap);
+  `tickWave()` private helper drives a 2-second startup delay and 2-second inter-wave pause;
+  `startWave()` spawns N large asteroids at random screen-edge positions; `waveNumber()`
+  public accessor; wave state fully reset on game start. 9 new tests; 91/91 passing.
+
+### Added
 - GAME-1: Scoring — `score()` accessor on `Game`; `score_` incremented in
   `checkCollisions()` via `asteroidScore()` helper (Large=20, Medium=50, Small=100 pts);
   `kScoreLarge/Medium/Small` constexpr constants; score starts at zero and accumulates
