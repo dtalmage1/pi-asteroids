@@ -463,6 +463,39 @@ recorded here rather than in PR descriptions so they are traceable.
 
 ---
 
+### IR-7 IInputSource Interface and Sdl2InputSource Stub **[FINAL]**
+
+**Acceptance criteria — all must pass before CORE-2 is Done:**
+
+1. `src/game/InputState.hpp` defines `struct InputState` in namespace `ast`:
+   - 7 bool fields, all defaulting to `false`:
+     `thrust`, `rotateLeft`, `rotateRight`, `fire`, `hyperspace`, `start`, `connected`
+2. `src/game/IInputSource.hpp` defines `class IInputSource` (pure interface) in namespace `ast`:
+   - `virtual InputState query() const = 0`
+   - Non-copyable, non-movable
+3. `src/input/Sdl2InputSource.hpp` / `.cpp` provide `class Sdl2InputSource : public IInputSource`:
+   - Constructor opens joystick index 0 if one is connected at startup; stores as `unique_ptr`
+     with custom deleter (`SDL_JoystickClose`) — RAII
+   - `query()` reads D-pad hat and 4 named button constants (B, A, X, Start) from the PiHut
+     SNES layout; constants defined in `.cpp` anonymous namespace with `jstest` comment
+   - `query()` always returns `connected = true` (hot-plug deferred to POL-1)
+   - `query()` returns all-false action fields (connected still true) if no joystick is open
+   - `lib_game` retains no SDL2 dependency
+4. `tests/unit/MockInputSource.hpp` provides `class MockInputSource : public IInputSource`
+   using GoogleMock
+5. Unit tests cover: `InputState` default values; `MockInputSource::query()` returns
+   configured state; mock can return different states on successive calls
+6. `cmake --build build` exits 0 on host (MSVC/Ninja) — zero clang-tidy findings
+7. `cmake --build build` exits 0 on RPi (GCC/ARM64/Makefile) — zero clang-tidy findings
+8. `ctest --output-on-failure` exits 0 on both host and RPi
+
+**Legitimate waivers for CORE-2:**
+- Integration test of real button mapping: hardware-in-the-loop test not possible until
+  CORE-4 wires the game loop; button indices documented for manual verification with
+  `jstest /dev/input/js0`
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -504,3 +537,4 @@ recorded here rather than in PR descriptions so they are traceable.
 | IR-4 GitHub Actions CI | **Final** |
 | IR-5 Deploy and integration test scripts | **Final** |
 | IR-6 Foundation types and IRenderer interface | **Final** |
+| IR-7 IInputSource interface and Sdl2InputSource stub | **Final** |
