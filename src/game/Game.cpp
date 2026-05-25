@@ -38,6 +38,13 @@ constexpr float kInvincDuration        =  3.0F;   // seconds of invincibility af
 constexpr int   kExtraLifeScore        = 10000;
 constexpr float kFlashPeriod           =  0.1F;   // half-period of ship flash while invincible
 constexpr float kGameOverDelay         =  5.0F;   // seconds before auto-returning to Attract
+constexpr float kParticleLifetimeMin   =  0.4F;   // seconds
+constexpr float kParticleLifetimeMax   =  1.0F;   // seconds
+constexpr float kParticleSpeedMin      = 60.0F;   // pixels/s
+constexpr float kParticleSpeedMax      = 180.0F;  // pixels/s
+constexpr float kParticleHalfLen       =  3.0F;   // half visual length of particle line
+constexpr int   kAsteroidParticleCount =  8;
+constexpr int   kShipParticleCount     = 12;
 constexpr float kAttractTitleCharHeightFrac  = 0.10F;
 constexpr float kAttractTitleYFrac           = 0.30F;
 constexpr float kAttractPromptCharHeightFrac = 0.05F;
@@ -154,12 +161,14 @@ void Game::update(float dt, const InputState& input) {
         projectiles_    = {};
         score_              = 0;
         splitSeed_          = 0;
+        particleSeed_       = 0U;
         waveNumber_         = 0;
         interWaveTimer_     = kInterWaveDelay;
         prevAllClear_       = true;
         waveSeed_           = 1000U;
         lives_              = kInitialLives;
         respawnTimer_       = 0.0F;
+        particles_          = {};
         nextExtraLifeScore_ = kExtraLifeScore;
     }
 
@@ -206,6 +215,7 @@ void Game::update(float dt, const InputState& input) {
 
     checkCollisions();
     checkShipCollisions();
+    tickParticles(dt);
     tickWave(dt);
     tickRespawn(dt);
     tickGameOver(dt);
@@ -236,6 +246,7 @@ void Game::checkCollisions() {
             if (circlesOverlap(p.position, kProjectileRadius,
                                rock.position, Asteroid::radius(rock.size))) {
                 p.active      = false;
+                spawnExplosion(rock.position, kAsteroidParticleCount);
                 score_       += asteroidScore(rock.size);
                 if (score_ >= nextExtraLifeScore_) {
                     nextExtraLifeScore_ += kExtraLifeScore;
@@ -260,6 +271,7 @@ void Game::checkShipCollisions() {
         if (circlesOverlap(ship_.position, Ship::kRadius,
                            rock.position, Asteroid::radius(rock.size))) {
             ship_.active    = false;
+            spawnExplosion(ship_.position, kShipParticleCount);
             --lives_;
             respawnTimer_   = kRespawnDelay;
             state_          = GameState::PlayerDead;
@@ -278,6 +290,46 @@ const std::vector<Asteroid>& Game::asteroids() const noexcept {
 
 const std::array<Projectile, kMaxProjectiles>& Game::projectiles() const noexcept {
     return projectiles_;
+}
+
+const std::array<Particle, kMaxParticles>& Game::particles() const noexcept {
+    return particles_;
+}
+
+void Game::spawnExplosion(Vec2 pos, int count) {
+    std::minstd_rand rng(particleSeed_);
+    particleSeed_ += static_cast<std::uint32_t>(count);
+    const auto randFloat = [&rng](float lo, float hi) -> float {
+        const float frac = static_cast<float>(rng()) /
+                           static_cast<float>(std::minstd_rand::max());
+        return lo + (frac * (hi - lo));
+    };
+    int spawned = 0;
+    for (auto& p : particles_) {
+        if (spawned >= count) { break; }
+        if (p.active) { continue; }
+        const float angle    = randFloat(0.0F, (2.0F * kPi));
+        const float speed    = randFloat(kParticleSpeedMin, kParticleSpeedMax);
+        p.position    = pos;
+        p.velocity    = Vec2{std::sin(angle), -std::cos(angle)} * speed;
+        p.lifetime    = randFloat(kParticleLifetimeMin, kParticleLifetimeMax);
+        p.maxLifetime = p.lifetime;
+        p.active      = true;
+        ++spawned;
+    }
+}
+
+void Game::tickParticles(float dt) {
+    for (auto& p : particles_) {
+        if (!p.active) { continue; }
+        p.lifetime -= dt;
+        if (p.lifetime <= 0.0F) {
+            p.active = false;
+            continue;
+        }
+        p.position = integratePosition(p.position, p.velocity, dt);
+        p.position = wrapPosition(p.position, screenSize_);
+    }
 }
 
 void Game::tickRespawn(float dt) {
@@ -333,6 +385,17 @@ void Game::render(IRenderer& renderer) const {
         const Vec2 b{p.position.x + (dir.x * kProjectileHalfLen),
                      p.position.y + (dir.y * kProjectileHalfLen)};
         renderer.drawLine(a, b, Colour{255, 255, 255, 255});
+    }
+
+    for (const auto& p : particles_) {
+        if (!p.active) { continue; }
+        const auto  alpha = static_cast<std::uint8_t>(255.0F * (p.lifetime / p.maxLifetime));
+        const Vec2  dir   = p.velocity.normalised();
+        const Vec2  pa{p.position.x - (dir.x * kParticleHalfLen),
+                       p.position.y - (dir.y * kParticleHalfLen)};
+        const Vec2  pb{p.position.x + (dir.x * kParticleHalfLen),
+                       p.position.y + (dir.y * kParticleHalfLen)};
+        renderer.drawLine(pa, pb, Colour{255, 255, 255, alpha});
     }
 
     if (state_ == GameState::Playing || state_ == GameState::PlayerDead) {
