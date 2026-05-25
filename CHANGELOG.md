@@ -8,6 +8,14 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- RND-2: `Game::render` draws ship chevron wireframe each frame via `IRenderer::drawLineStrip`
+  (4 vertices: nose `(0,−15)`, right wing `(9,9)`, tail notch `(0,4)`, left wing `(−9,9)`,
+  rotated by `ship_.angle` using 2-D rotation matrix, translated to `ship_.position`);
+  ship spawns at screen centre; `buildShipVertices` helper in anonymous namespace;
+  `GameTest.RenderDrawsShipWireframe` replaces `RenderDoesNotCrash`;
+  `GameTest.ShipSpawnsAtScreenCenter` added. 38/38 tests passing.
+
+### Added
 - RND-1: `Sdl2Renderer::drawLine` implemented via `SDL_RenderDrawLineF`;
   `Sdl2Renderer::drawLineStrip` implemented with iterator traversal and `closed` support
   (extra segment back to first point); stubs replaced. 37/37 tests unaffected.

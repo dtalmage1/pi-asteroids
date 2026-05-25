@@ -650,6 +650,26 @@ unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAccele
 
 ---
 
+### IR-13 Ship Wireframe Rendering **[FINAL]**
+
+**Acceptance criteria — all must pass before RND-2 is Done:**
+
+1. `Game::Game` constructor initialises `ship_.position` to `{screenSize.x / 2, screenSize.y / 2}`
+2. `Game::render(IRenderer&)` calls `renderer.drawLineStrip(verts, white, closed=true)` exactly
+   once per frame when `ship_.active` is `true`
+3. Vertices are computed by rotating the local-space chevron by `ship_.angle` and translating to
+   `ship_.position`; rotation uses the 2-D rotation matrix:
+   `x' = x·cos(θ) − y·sin(θ)`, `y' = x·sin(θ) + y·cos(θ)`
+4. Local-space chevron (angle = 0 = nose pointing up, Y-down screen):
+   - Nose: `(0, −15)`, Right wing: `(9, 9)`, Tail notch: `(0, 4)`, Left wing: `(−9, 9)`
+5. `render()` does not call `drawLineStrip` when `ship_.active` is `false`
+6. `GameTest.RenderDrawsShipWireframe` and `GameTest.ShipSpawnsAtScreenCenter` tests pass
+7. 38/38 unit tests pass on host (MSVC/Ninja); zero clang-tidy findings
+8. 38/38 unit tests pass on RPi (GCC/Makefile); zero clang-tidy findings
+9. Visual: ship chevron visible at screen centre on RPi display when game launched
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -697,3 +717,4 @@ unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAccele
 | IR-10 Game class and state machine scaffold | **Final** |
 | IR-11 Physics helpers, Collision helper, Ship struct | **Final** |
 | IR-12 Sdl2Renderer drawLine and drawLineStrip | **Final** |
+| IR-13 Ship wireframe rendering | **Final** |
