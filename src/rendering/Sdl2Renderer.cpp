@@ -1,5 +1,6 @@
 #include "rendering/Sdl2Renderer.hpp"
 #include <SDL.h>
+#include <iterator>
 
 namespace ast {
 
@@ -19,11 +20,24 @@ void Sdl2Renderer::clear(Colour background) {
     SDL_RenderClear(renderer_.get());
 }
 
-// Stub — drawing implemented in RND-1.
-void Sdl2Renderer::drawLine(Vec2 /*a*/, Vec2 /*b*/, Colour /*c*/) {}
+void Sdl2Renderer::drawLine(Vec2 a, Vec2 b, Colour c) {
+    SDL_SetRenderDrawColor(renderer_.get(), c.r, c.g, c.b, c.a);
+    SDL_RenderDrawLineF(renderer_.get(), a.x, a.y, b.x, b.y);
+}
 
-// Stub — drawing implemented in RND-1.
-void Sdl2Renderer::drawLineStrip(const std::vector<Vec2>& /*points*/, Colour /*c*/, bool /*closed*/) {}
+void Sdl2Renderer::drawLineStrip(const std::vector<Vec2>& points, Colour c, bool closed) {
+    if (points.size() < 2) { return; }
+    SDL_SetRenderDrawColor(renderer_.get(), c.r, c.g, c.b, c.a);
+    for (auto it = points.cbegin(); std::next(it) != points.cend(); ++it) {
+        const auto nextIt = std::next(it);
+        SDL_RenderDrawLineF(renderer_.get(), it->x, it->y, nextIt->x, nextIt->y);
+    }
+    if (closed) {
+        SDL_RenderDrawLineF(renderer_.get(),
+                            points.back().x,  points.back().y,
+                            points.front().x, points.front().y);
+    }
+}
 
 void Sdl2Renderer::present() {
     SDL_RenderPresent(renderer_.get());

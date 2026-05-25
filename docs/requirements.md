@@ -626,6 +626,30 @@ unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAccele
 
 ---
 
+### IR-12 Sdl2Renderer drawLine and drawLineStrip **[FINAL]**
+
+**Acceptance criteria — all must pass before RND-1 is Done:**
+
+1. `Sdl2Renderer::drawLine(Vec2 a, Vec2 b, Colour c)` calls `SDL_SetRenderDrawColor`
+   then `SDL_RenderDrawLineF`; stub comments removed
+2. `Sdl2Renderer::drawLineStrip(const std::vector<Vec2>& points, Colour c, bool closed)`:
+   - Returns immediately if `points.size() < 2`
+   - Sets draw colour once; draws each adjacent segment via `SDL_RenderDrawLineF`
+   - If `closed == true`, draws an additional segment from `points.back()` to `points.front()`
+   - Uses iterator traversal (no subscript with non-const index)
+3. `cmake --build build` exits 0 on host (MSVC/Ninja) — zero clang-tidy findings
+4. `cmake --build build` exits 0 on RPi (GCC/ARM64/Makefile) — zero clang-tidy findings
+5. `ctest --output-on-failure` exits 0 on both targets (37/37 tests unaffected)
+6. Visual integration test (RND-2): ship wireframe visible on RPi display
+
+**Legitimate waivers for RND-1:**
+- Unit tests: `drawLine` and `drawLineStrip` call SDL2 renderer functions which require an
+  active display context; not exercisable in the headless unit test environment.
+  The `MockRenderer` already tests the interface contract. Visual verification is the
+  integration test, provided by RND-2 (ship wireframe rendering).
+
+---
+
 ## 6. Out of Scope for v1.0
 
 - Persistent high-score storage (file or database)
@@ -672,3 +696,4 @@ unit tests `ApplyThrustAngleZeroAcceleratesUp` and `ApplyThrustAngleHalfPiAccele
 | IR-9 Platform RAII and game loop | **Final** |
 | IR-10 Game class and state machine scaffold | **Final** |
 | IR-11 Physics helpers, Collision helper, Ship struct | **Final** |
+| IR-12 Sdl2Renderer drawLine and drawLineStrip | **Final** |
