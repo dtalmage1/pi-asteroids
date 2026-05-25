@@ -32,6 +32,8 @@ public:
     const std::array<Projectile, kMaxProjectiles>& projectiles() const noexcept;
 
 private:
+    void tryFire(const InputState& input);
+
     IAudioSink&           audio_;
     Vec2                  screenSize_;
     GameState             state_ = GameState::Attract;

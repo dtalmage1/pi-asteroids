@@ -1,7 +1,6 @@
 #include "game/Game.hpp"
 #include "game/Colour.hpp"
 #include "game/physics/Physics.hpp"
-#include <algorithm>
 #include <array>
 #include <cmath>
 #include <vector>
@@ -90,18 +89,7 @@ void Game::update(float dt, const InputState& input) {
 
         if (ship_.invincTimer > 0.0F) { ship_.invincTimer -= dt; }
 
-        if (input.fire) {
-            auto it = std::find_if(projectiles_.begin(), projectiles_.end(),
-                [](const Projectile& p) { return !p.active; });
-            if (it != projectiles_.end()) {
-                const Vec2 nose{std::sin(ship_.angle), -std::cos(ship_.angle)};
-                it->position = ship_.position + (nose * kShipNoseOffset);
-                it->velocity = ship_.velocity + (nose * kProjectileSpeed);
-                it->lifetime = kProjectileLifetime;
-                it->owner    = ProjectileOwner::Player;
-                it->active   = true;
-            }
-        }
+        tryFire(input);
     }
 
     for (auto& p : projectiles_) {
@@ -120,6 +108,22 @@ void Game::update(float dt, const InputState& input) {
         rock.angle    = wrapAngle(rock.angle + (rock.angularVel * dt));
         rock.position = integratePosition(rock.position, rock.velocity, dt);
         rock.position = wrapPosition(rock.position, screenSize_);
+    }
+}
+
+void Game::tryFire(const InputState& input) {
+    if (!input.fire) { return; }
+    Projectile* slot = nullptr;
+    for (auto& candidate : projectiles_) {
+        if (!candidate.active) { slot = &candidate; break; }
+    }
+    if (slot != nullptr) {
+        const Vec2 nose{std::sin(ship_.angle), -std::cos(ship_.angle)};
+        slot->position = ship_.position + (nose * kShipNoseOffset);
+        slot->velocity = ship_.velocity + (nose * kProjectileSpeed);
+        slot->lifetime = kProjectileLifetime;
+        slot->owner    = ProjectileOwner::Player;
+        slot->active   = true;
     }
 }
 
