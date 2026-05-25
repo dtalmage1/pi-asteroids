@@ -41,6 +41,7 @@ public:
 
 private:
     void tryFire(const InputState& input);
+    void tryHyperspace(const InputState& input);
     void checkCollisions();
     void checkShipCollisions();
     void spawnExplosion(Vec2 pos, int count);
@@ -58,8 +59,9 @@ private:
     std::vector<Asteroid> asteroids_;
     std::array<Projectile, kMaxProjectiles> projectiles_{};
     std::array<Particle,   kMaxParticles>   particles_{};
-    std::uint32_t         splitSeed_      = 0;
-    std::uint32_t         particleSeed_   = 0U;
+    std::uint32_t         splitSeed_        = 0;
+    std::uint32_t         particleSeed_     = 0U;
+    std::uint32_t         hyperspaceSeed_   = 0U;
     int                   score_          = 0;
     int                   waveNumber_     = 0;
     float                 interWaveTimer_ = 0.0F;

@@ -43,8 +43,9 @@ constexpr float kParticleLifetimeMax   =  1.0F;   // seconds
 constexpr float kParticleSpeedMin      = 60.0F;   // pixels/s
 constexpr float kParticleSpeedMax      = 180.0F;  // pixels/s
 constexpr float kParticleHalfLen       =  3.0F;   // half visual length of particle line
-constexpr int   kAsteroidParticleCount =  8;
-constexpr int   kShipParticleCount     = 12;
+constexpr int   kAsteroidParticleCount  =  8;
+constexpr int   kShipParticleCount      = 12;
+constexpr std::uint32_t kHyperspaceDeathOdds = 5U; // 1-in-5 chance of destruction on arrival
 constexpr float kAttractTitleCharHeightFrac  = 0.10F;
 constexpr float kAttractTitleYFrac           = 0.30F;
 constexpr float kAttractPromptCharHeightFrac = 0.05F;
@@ -165,6 +166,7 @@ void Game::update(float dt, const InputState& input) {
         score_              = 0;
         splitSeed_          = 0;
         particleSeed_       = 0U;
+        hyperspaceSeed_     = 0U;
         waveNumber_         = 0;
         interWaveTimer_     = kInterWaveDelay;
         prevAllClear_       = true;
@@ -197,6 +199,7 @@ void Game::update(float dt, const InputState& input) {
         if (ship_.invincTimer > 0.0F) { ship_.invincTimer -= dt; }
 
         tryFire(input);
+        tryHyperspace(input);
     }
 
     for (auto& p : projectiles_) {
@@ -238,6 +241,23 @@ void Game::tryFire(const InputState& input) {
         slot->lifetime = kProjectileLifetime;
         slot->owner    = ProjectileOwner::Player;
         slot->active   = true;
+    }
+}
+
+void Game::tryHyperspace(const InputState& input) {
+    if (!input.hyperspace) { return; }
+    ++hyperspaceSeed_;
+    std::minstd_rand rng(hyperspaceSeed_);
+    const bool dies = ((rng() % kHyperspaceDeathOdds) == 0U);
+    const float nx = static_cast<float>(rng()) / static_cast<float>(std::minstd_rand::max());
+    const float ny = static_cast<float>(rng()) / static_cast<float>(std::minstd_rand::max());
+    ship_.position = {nx * screenSize_.x, ny * screenSize_.y};
+    if (dies) {
+        ship_.active  = false;
+        spawnExplosion(ship_.position, kShipParticleCount);
+        --lives_;
+        respawnTimer_ = kRespawnDelay;
+        state_        = GameState::PlayerDead;
     }
 }
 
