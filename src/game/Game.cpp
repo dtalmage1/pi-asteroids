@@ -38,6 +38,11 @@ constexpr float kInvincDuration        =  3.0F;   // seconds of invincibility af
 constexpr int   kExtraLifeScore        = 10000;
 constexpr float kFlashPeriod           =  0.1F;   // half-period of ship flash while invincible
 constexpr float kGameOverDelay         =  5.0F;   // seconds before auto-returning to Attract
+constexpr float kHudMargin             = 10.0F;   // pixels from screen edge to HUD elements
+constexpr float kHudCharHeightFrac     =  0.04F;  // score digit height as fraction of screen height
+constexpr float kShipIconSpan          = 24.0F;   // kShipShape vertical extent: nose(-15) to tail(+9)
+constexpr float kIconNoseFrac          =  0.625F; // 15/24: nose-to-centre as fraction of icon span
+constexpr float kIconHalfWidthFrac     =  0.375F; // 9/24: half-width of icon as fraction of icon span
 } // namespace
 
 namespace ast {
@@ -53,15 +58,17 @@ constexpr std::array<ast::Vec2, 4> kShipShape{{
     {-9.0F,   9.0F},  // left wing
 }};
 
-std::vector<ast::Vec2> buildShipVertices(ast::Vec2 pos, float angle) {
+std::vector<ast::Vec2> buildShipVertices(ast::Vec2 pos, float angle, float scale = 1.0F) {
     const float cosA = std::cos(angle);
     const float sinA = std::sin(angle);
     std::vector<ast::Vec2> verts;
     verts.reserve(kShipShape.size());
     for (const auto& v : kShipShape) {
+        const float sx = v.x * scale;
+        const float sy = v.y * scale;
         verts.push_back({
-            pos.x + (v.x * cosA) - (v.y * sinA),
-            pos.y + (v.x * sinA) + (v.y * cosA)
+            pos.x + (sx * cosA) - (sy * sinA),
+            pos.y + (sx * sinA) + (sy * cosA)
         });
     }
     return verts;
@@ -322,6 +329,30 @@ void Game::render(IRenderer& renderer) const {
         const Vec2 b{p.position.x + (dir.x * kProjectileHalfLen),
                      p.position.y + (dir.y * kProjectileHalfLen)};
         renderer.drawLine(a, b, Colour{255, 255, 255, 255});
+    }
+
+    if (state_ == GameState::Playing || state_ == GameState::PlayerDead) {
+        const float charH = screenSize_.y * kHudCharHeightFrac;
+
+        // Score — top-left
+        const std::string scoreStr = std::to_string(score_);
+        drawString(renderer,
+                   Vec2{kHudMargin, kHudMargin},
+                   charH, scoreStr, Colour{255, 255, 255, 255});
+
+        // Lives icons — top-right, small ship silhouettes pointing up
+        const float iconScale = charH / kShipIconSpan;
+        const float iconStep  = charH;
+        for (int i = 0; i < lives_; ++i) {
+            const float cx = screenSize_.x - kHudMargin
+                             - (charH * kIconHalfWidthFrac)
+                             - (static_cast<float>(i) * iconStep);
+            const float cy = kHudMargin + (charH * kIconNoseFrac);
+            renderer.drawLineStrip(
+                buildShipVertices({cx, cy}, 0.0F, iconScale),
+                Colour{255, 255, 255, 255},
+                true);
+        }
     }
 
     if (state_ == GameState::GameOver) {

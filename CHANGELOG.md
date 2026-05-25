@@ -8,6 +8,11 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- RND-5: HUD — score displayed top-left via `drawString` (digit stroke font from GAME-4);
+  lives indicator top-right as small scaled ship icons via `buildShipVertices` with new
+  `scale` parameter; both shown only in Playing and PlayerDead states. 5 new tests; 118/118 passing.
+
+### Added
 - GAME-4: GameOver state — `tickGameOver()` decrements `gameOverTimer_` (5 s);
   state auto-transitions to `Attract` when timer expires; pressing START transitions
   immediately; `render()` overlays "GAME OVER" (centred, 8% screen height) and final
