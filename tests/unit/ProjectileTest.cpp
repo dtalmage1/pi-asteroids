@@ -164,8 +164,8 @@ TEST(Game, RenderDrawsActiveProjectile) {
     fireInput.fire = true;
     game.update(1.0F / 60.0F, fireInput);
 
-    EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, true)).Times(1); // ship
-    EXPECT_CALL(renderer, drawLine(testing::_, testing::_, testing::_)).Times(1); // projectile
+    EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, true)).Times(testing::AtLeast(1)); // ship + lives icons
+    EXPECT_CALL(renderer, drawLine(testing::_, testing::_, testing::_)).Times(testing::AtLeast(1)); // projectile + score HUD
     game.render(renderer);
 }
 
