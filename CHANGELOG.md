@@ -8,6 +8,11 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- RND-1: `Sdl2Renderer::drawLine` implemented via `SDL_RenderDrawLineF`;
+  `Sdl2Renderer::drawLineStrip` implemented with iterator traversal and `closed` support
+  (extra segment back to first point); stubs replaced. 37/37 tests unaffected.
+
+### Added
 - ENT-1: `Physics.hpp` inline free functions (`integratePosition`, `applyThrust`,
   `applyDrag`, `wrapPosition`, `wrapAngle`); `Collision.hpp` (`circlesOverlap`);
   `Ship` struct (position, velocity, angle, invincTimer, thrusting, active; kRadius=10);
