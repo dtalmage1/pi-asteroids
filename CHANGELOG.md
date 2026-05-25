@@ -8,6 +8,12 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- GAME-5: Attract screen — "ASTEROIDS" title (10% screen height, centred at 30% y) and
+  "PRESS START" prompt (5% screen height, centred at 55% y) rendered via stroke font;
+  Glyph.cpp extended with letters D, I, P, S, T; overlay shown only in Attract state.
+  5 new tests; 123/123 passing.
+
+### Added
 - RND-5: HUD — score displayed top-left via `drawString` (digit stroke font from GAME-4);
   lives indicator top-right as small scaled ship icons via `buildShipVertices` with new
   `scale` parameter; both shown only in Playing and PlayerDead states. 5 new tests; 118/118 passing.
