@@ -71,6 +71,21 @@ void Game::update(float dt, const InputState& input) {
 
         if (ship_.invincTimer > 0.0F) { ship_.invincTimer -= dt; }
     }
+
+    for (auto& rock : asteroids_) {
+        if (!rock.active) { continue; }
+        rock.angle    = wrapAngle(rock.angle + (rock.angularVel * dt));
+        rock.position = integratePosition(rock.position, rock.velocity, dt);
+        rock.position = wrapPosition(rock.position, screenSize_);
+    }
+}
+
+void Game::spawnAsteroid(Asteroid a) {
+    asteroids_.push_back(std::move(a));
+}
+
+const std::vector<Asteroid>& Game::asteroids() const noexcept {
+    return asteroids_;
 }
 
 void Game::render(IRenderer& renderer) const {

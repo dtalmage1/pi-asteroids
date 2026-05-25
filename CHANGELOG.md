@@ -8,6 +8,14 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- ENT-3: `AsteroidSize` enum (`Large`/`Medium`/`Small`); `Asteroid` struct (position,
+  velocity, angle, angularVel, size, shape, active; radii 48/24/12 px);
+  `generateAsteroidShape(size, vertices, seed)` — seeded `std::minstd_rand`, ±20% jitter,
+  local-space polygon; `Game::spawnAsteroid` / `Game::asteroids()` accessor;
+  asteroid update loop (rotate + integrate + wrap) runs each frame.
+  `Asteroid.cpp` added to `lib_game`. 11 new tests; 54/54 passing.
+
+### Added
 - ENT-2: `Game::update` handles `rotateLeft`/`rotateRight` (3.5 rad/s), `thrust`
   (200 px/s² via `applyThrust`), and `ship_.thrusting` flag; `Attract→Playing`
   transition on `InputState::start` (ship reset to centre, zero velocity, zero angle);
