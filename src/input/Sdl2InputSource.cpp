@@ -23,13 +23,27 @@ Sdl2InputSource::Sdl2InputSource()
 
 Sdl2InputSource::~Sdl2InputSource() = default;
 
+void Sdl2InputSource::handleEvent(const SDL_Event& event) {
+    if (event.type == SDL_JOYDEVICEADDED) {
+        if (!joystick_) {
+            joystick_.reset(SDL_JoystickOpen(static_cast<int>(event.jdevice.which)));
+        }
+    } else if (event.type == SDL_JOYDEVICEREMOVED) {
+        if (joystick_ &&
+            SDL_JoystickInstanceID(joystick_.get()) == event.jdevice.which) {
+            joystick_.reset();
+        }
+    }
+}
+
 InputState Sdl2InputSource::query() const {
     InputState state;
-    state.connected = true; // hot-plug detection deferred to POL-1
 
-    if (!joystick_) {
-        return state;
+    if (!joystick_ || SDL_JoystickGetAttached(joystick_.get()) == SDL_FALSE) {
+        return state;  // connected defaults to false
     }
+
+    state.connected = true;
 
     const auto hat = SDL_JoystickGetHat(joystick_.get(), kHatIndex);
     state.rotateLeft  = (hat & SDL_HAT_LEFT)  != 0;
