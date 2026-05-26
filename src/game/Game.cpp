@@ -45,7 +45,9 @@ constexpr float kParticleSpeedMax      = 180.0F;  // pixels/s
 constexpr float kParticleHalfLen       =  3.0F;   // half visual length of particle line
 constexpr int   kAsteroidParticleCount  =  8;
 constexpr int   kShipParticleCount      = 12;
-constexpr std::uint32_t kHyperspaceDeathOdds = 5U; // 1-in-5 chance of destruction on arrival
+constexpr std::uint32_t kHyperspaceDeathOdds  = 5U;    // 1-in-5 chance of destruction on arrival
+constexpr float kSaucerSpawnInterval          = 15.0F; // seconds between saucer appearances
+constexpr float kLargeSaucerSpeed             = 80.0F; // pixels/s
 constexpr float kAttractTitleCharHeightFrac  = 0.10F;
 constexpr float kAttractTitleYFrac           = 0.30F;
 constexpr float kAttractPromptCharHeightFrac = 0.05F;
@@ -63,6 +65,36 @@ constexpr float kIconHalfWidthFrac     =  0.375F; // 9/24: half-width of icon as
 namespace ast {
 
 namespace {
+
+// Saucer shape in normalised space (radius=1). Body is a closed 6-point strip;
+// dome is an open 4-point strip sitting on top of the body.
+constexpr std::array<ast::Vec2, 6> kSaucerBody{{
+    {-1.0F,  0.0F},
+    {-0.5F, -0.4F},
+    { 0.5F, -0.4F},
+    { 1.0F,  0.0F},
+    { 0.5F,  0.4F},
+    {-0.5F,  0.4F},
+}};
+constexpr std::array<ast::Vec2, 4> kSaucerDome{{
+    {-0.5F, -0.4F},
+    {-0.3F, -0.8F},
+    { 0.3F, -0.8F},
+    { 0.5F, -0.4F},
+}};
+
+// Scale a shape array by radius and translate to world position.
+template <std::size_t N>
+std::vector<ast::Vec2> scaledVerts(
+    const std::array<ast::Vec2, N>& src, ast::Vec2 pos, float r)
+{
+    std::vector<ast::Vec2> v;
+    v.reserve(N);
+    for (const auto& s : src) {
+        v.push_back({pos.x + (s.x * r), pos.y + (s.y * r)});
+    }
+    return v;
+}
 
 // Local-space chevron vertices (angle=0 = nose pointing up, Y-down screen).
 // Order: nose, right wing, tail notch, left wing — closed strip forms the hull.
@@ -167,6 +199,9 @@ void Game::update(float dt, const InputState& input) {
         splitSeed_          = 0;
         particleSeed_       = 0U;
         hyperspaceSeed_     = 0U;
+        saucer_             = {};
+        saucerSpawnTimer_   = kSaucerSpawnInterval;
+        saucerSeed_         = 0U;
         waveNumber_         = 0;
         interWaveTimer_     = kInterWaveDelay;
         prevAllClear_       = true;
@@ -223,6 +258,7 @@ void Game::update(float dt, const InputState& input) {
     checkCollisions();
     checkShipCollisions();
     tickParticles(dt);
+    tickSaucer(dt);
     tickWave(dt);
     tickRespawn(dt);
     tickGameOver(dt);
@@ -258,6 +294,44 @@ void Game::tryHyperspace(const InputState& input) {
         --lives_;
         respawnTimer_ = kRespawnDelay;
         state_        = GameState::PlayerDead;
+    }
+}
+
+void Game::spawnSaucer() {
+    ++saucerSeed_;
+    std::minstd_rand rng(saucerSeed_);
+    const bool fromRight = ((rng() % 2U) == 0U);
+    const float yFrac    = static_cast<float>(rng()) / static_cast<float>(std::minstd_rand::max());
+    const float y        = (screenSize_.y * 0.1F) + (yFrac * (screenSize_.y * 0.8F));
+    const float r        = Saucer::radius(SaucerSize::Large);
+    saucer_.size      = SaucerSize::Large;
+    saucer_.active    = true;
+    saucer_.fireTimer = 0.0F;
+    if (fromRight) {
+        saucer_.position = {screenSize_.x + r, y};
+        saucer_.velocity = {-kLargeSaucerSpeed, 0.0F};
+    } else {
+        saucer_.position = {-r, y};
+        saucer_.velocity = {kLargeSaucerSpeed, 0.0F};
+    }
+}
+
+void Game::tickSaucer(float dt) {
+    if (state_ == GameState::Attract || state_ == GameState::GameOver) { return; }
+
+    if (saucer_.active) {
+        saucer_.position.x += saucer_.velocity.x * dt;
+        saucer_.position.y += saucer_.velocity.y * dt;
+        const float r = Saucer::radius(saucer_.size);
+        if ((saucer_.position.x < (-r)) || (saucer_.position.x > (screenSize_.x + r))) {
+            saucer_.active    = false;
+            saucerSpawnTimer_ = kSaucerSpawnInterval;
+        }
+    } else {
+        saucerSpawnTimer_ -= dt;
+        if (saucerSpawnTimer_ <= 0.0F) {
+            spawnSaucer();
+        }
     }
 }
 
@@ -401,6 +475,13 @@ void Game::render(IRenderer& renderer) const {
             buildAsteroidVertices(rock),
             Colour{255, 255, 255, 255},
             true);
+    }
+    if (saucer_.active) {
+        const float r = Saucer::radius(saucer_.size);
+        renderer.drawLineStrip(scaledVerts(kSaucerBody, saucer_.position, r),
+                               Colour{255, 255, 255, 255}, true);
+        renderer.drawLineStrip(scaledVerts(kSaucerDome, saucer_.position, r),
+                               Colour{255, 255, 255, 255}, false);
     }
     for (const auto& p : projectiles_) {
         if (!p.active) { continue; }
@@ -550,6 +631,8 @@ void Game::startWave() {
 GameState Game::state() const noexcept { return state_; }
 
 const ScoreTable& Game::scoreTable() const noexcept { return scoreTable_; }
+
+const Saucer& Game::saucer() const noexcept { return saucer_; }
 
 const Ship& Game::ship() const noexcept { return ship_; }
 

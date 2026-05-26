@@ -7,6 +7,7 @@
 #include "game/entities/Asteroid.hpp"
 #include "game/entities/Particle.hpp"
 #include "game/entities/Projectile.hpp"
+#include "game/entities/Saucer.hpp"
 #include "game/entities/Ship.hpp"
 #include <array>
 #include <cstdint>
@@ -38,10 +39,13 @@ public:
     const std::array<Projectile, kMaxProjectiles>& projectiles() const noexcept;
     const std::array<Particle,   kMaxParticles>&   particles()   const noexcept;
     const ScoreTable& scoreTable() const noexcept;
+    const Saucer&     saucer()     const noexcept;
 
 private:
     void tryFire(const InputState& input);
     void tryHyperspace(const InputState& input);
+    void spawnSaucer();
+    void tickSaucer(float dt);
     void checkCollisions();
     void checkShipCollisions();
     void spawnExplosion(Vec2 pos, int count);
@@ -62,6 +66,9 @@ private:
     std::uint32_t         splitSeed_        = 0;
     std::uint32_t         particleSeed_     = 0U;
     std::uint32_t         hyperspaceSeed_   = 0U;
+    Saucer                saucer_           {};
+    float                 saucerSpawnTimer_ = 0.0F;
+    std::uint32_t         saucerSeed_       = 0U;
     int                   score_          = 0;
     int                   waveNumber_     = 0;
     float                 interWaveTimer_ = 0.0F;
