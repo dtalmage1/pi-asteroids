@@ -51,6 +51,7 @@ add_library(lib_game STATIC
     src/game/ScoreTable.cpp
     src/game/Wave.cpp
     src/game/entities/Asteroid.cpp
+    src/game/entities/Saucer.cpp
 )
 target_include_directories(lib_game PUBLIC src)
 
