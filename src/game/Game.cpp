@@ -354,6 +354,7 @@ void Game::fireSaucerProjectile() {
     slot->lifetime = kProjectileLifetime;
     slot->owner    = ProjectileOwner::Saucer;
     slot->active   = true;
+    audio_.play(SoundId::SaucerFire);
 }
 
 void Game::tickSaucer(float dt) {
@@ -367,10 +368,12 @@ void Game::tickSaucer(float dt) {
             saucer_.fireTimer = kSaucerFireInterval;
             fireSaucerProjectile();
         }
+        audio_.loop(SoundId::SaucerEngine);
         const float r = Saucer::radius(saucer_.size) * scale_;
         if ((saucer_.position.x < (-r)) || (saucer_.position.x > (screenSize_.x + r))) {
             saucer_.active    = false;
             saucerSpawnTimer_ = kSaucerSpawnInterval;
+            audio_.stop(SoundId::SaucerEngine);
         }
     } else {
         saucerSpawnTimer_ -= dt;
@@ -423,6 +426,7 @@ void Game::checkSaucerCollisions() {
                 nextExtraLifeScore_ += kExtraLifeScore;
                 ++lives_;
             }
+            audio_.stop(SoundId::SaucerEngine);
             audio_.play(SoundId::ExplosionLarge);
             return;
         }
