@@ -15,7 +15,7 @@ struct SdlRendererDeleter {
 
 class Sdl2Renderer : public IRenderer {
 public:
-    explicit Sdl2Renderer(SDL_Window* window);
+    explicit Sdl2Renderer(SDL_Window* window, bool vsync = false);
     ~Sdl2Renderer() override;
 
     Sdl2Renderer(const Sdl2Renderer&)            = delete;
