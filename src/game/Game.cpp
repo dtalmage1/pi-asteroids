@@ -46,8 +46,11 @@ constexpr float kParticleHalfLen       =  3.0F;   // half visual length of parti
 constexpr int   kAsteroidParticleCount  =  8;
 constexpr int   kShipParticleCount      = 12;
 constexpr std::uint32_t kHyperspaceDeathOdds  = 5U;    // 1-in-5 chance of destruction on arrival
-constexpr float kSaucerSpawnInterval          = 15.0F; // seconds between saucer appearances
-constexpr float kLargeSaucerSpeed             = 80.0F; // pixels/s
+constexpr float kSaucerSpawnInterval          = 15.0F;  // seconds between saucer appearances
+constexpr float kLargeSaucerSpeed             = 80.0F;  // pixels/s
+constexpr float kSaucerFireInterval           =  1.5F;  // seconds between saucer shots
+constexpr float kSaucerProjectileSpeed        = 300.0F; // pixels/s
+constexpr int   kScoreSaucerLarge             = 200;
 constexpr float kAttractTitleCharHeightFrac  = 0.10F;
 constexpr float kAttractTitleYFrac           = 0.30F;
 constexpr float kAttractPromptCharHeightFrac = 0.05F;
@@ -202,6 +205,7 @@ void Game::update(float dt, const InputState& input) {
         saucer_             = {};
         saucerSpawnTimer_   = kSaucerSpawnInterval;
         saucerSeed_         = 0U;
+        saucerFireSeed_     = 0U;
         waveNumber_         = 0;
         interWaveTimer_     = kInterWaveDelay;
         prevAllClear_       = true;
@@ -256,6 +260,7 @@ void Game::update(float dt, const InputState& input) {
     }
 
     checkCollisions();
+    checkSaucerCollisions();
     checkShipCollisions();
     tickParticles(dt);
     tickSaucer(dt);
@@ -306,7 +311,7 @@ void Game::spawnSaucer() {
     const float r        = Saucer::radius(SaucerSize::Large);
     saucer_.size      = SaucerSize::Large;
     saucer_.active    = true;
-    saucer_.fireTimer = 0.0F;
+    saucer_.fireTimer = kSaucerFireInterval;
     if (fromRight) {
         saucer_.position = {screenSize_.x + r, y};
         saucer_.velocity = {-kLargeSaucerSpeed, 0.0F};
@@ -316,12 +321,35 @@ void Game::spawnSaucer() {
     }
 }
 
+void Game::fireSaucerProjectile() {
+    Projectile* slot = nullptr;
+    for (auto& candidate : projectiles_) {
+        if (!candidate.active) { slot = &candidate; break; }
+    }
+    if (slot == nullptr) { return; }
+    ++saucerFireSeed_;
+    std::minstd_rand rng(saucerFireSeed_);
+    const float frac  = static_cast<float>(rng()) / static_cast<float>(std::minstd_rand::max());
+    const float angle = frac * (2.0F * kPi);
+    const Vec2  dir{std::sin(angle), -std::cos(angle)};
+    slot->position = saucer_.position;
+    slot->velocity = dir * kSaucerProjectileSpeed;
+    slot->lifetime = kProjectileLifetime;
+    slot->owner    = ProjectileOwner::Saucer;
+    slot->active   = true;
+}
+
 void Game::tickSaucer(float dt) {
     if (state_ == GameState::Attract || state_ == GameState::GameOver) { return; }
 
     if (saucer_.active) {
         saucer_.position.x += saucer_.velocity.x * dt;
         saucer_.position.y += saucer_.velocity.y * dt;
+        saucer_.fireTimer -= dt;
+        if (saucer_.fireTimer <= 0.0F) {
+            saucer_.fireTimer = kSaucerFireInterval;
+            fireSaucerProjectile();
+        }
         const float r = Saucer::radius(saucer_.size);
         if ((saucer_.position.x < (-r)) || (saucer_.position.x > (screenSize_.x + r))) {
             saucer_.active    = false;
@@ -361,6 +389,26 @@ void Game::checkCollisions() {
     for (auto& a : spawned) { asteroids_.push_back(std::move(a)); }
 }
 
+void Game::checkSaucerCollisions() {
+    if (!saucer_.active) { return; }
+    for (auto& p : projectiles_) {
+        if (!p.active || p.owner != ProjectileOwner::Player) { continue; }
+        if (circlesOverlap(p.position, kProjectileRadius,
+                           saucer_.position, Saucer::radius(saucer_.size))) {
+            p.active          = false;
+            saucer_.active    = false;
+            saucerSpawnTimer_ = kSaucerSpawnInterval;
+            spawnExplosion(saucer_.position, kAsteroidParticleCount);
+            score_           += kScoreSaucerLarge;
+            if (score_ >= nextExtraLifeScore_) {
+                nextExtraLifeScore_ += kExtraLifeScore;
+                ++lives_;
+            }
+            return;
+        }
+    }
+}
+
 void Game::checkShipCollisions() {
     if (state_ != GameState::Playing) { return; }
     if (!ship_.active || ship_.invincTimer > 0.0F) { return; }
@@ -380,6 +428,12 @@ void Game::checkShipCollisions() {
 
 void Game::spawnAsteroid(Asteroid a) {
     asteroids_.push_back(std::move(a));
+}
+
+void Game::spawnProjectile(Projectile p) {
+    for (auto& slot : projectiles_) {
+        if (!slot.active) { slot = p; return; }
+    }
 }
 
 const std::vector<Asteroid>& Game::asteroids() const noexcept {
