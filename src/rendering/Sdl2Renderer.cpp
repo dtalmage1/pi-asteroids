@@ -8,8 +8,8 @@ void SdlRendererDeleter::operator()(SDL_Renderer* r) const {
     SDL_DestroyRenderer(r);
 }
 
-Sdl2Renderer::Sdl2Renderer(SDL_Window* window)
-    : renderer_(SDL_CreateRenderer(window, -1, 0))
+Sdl2Renderer::Sdl2Renderer(SDL_Window* window, bool vsync)
+    : renderer_(SDL_CreateRenderer(window, -1, vsync ? SDL_RENDERER_PRESENTVSYNC : 0))
 {}
 
 Sdl2Renderer::~Sdl2Renderer() = default;

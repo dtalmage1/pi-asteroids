@@ -105,6 +105,12 @@ target_link_libraries(asteroids PRIVATE
     SDL2::SDL2-static
 )
 
+# ── vsync ─────────────────────────────────────────────────────────────────────
+option(ENABLE_VSYNC "Enable SDL2 vsync (SDL_RENDERER_PRESENTVSYNC)" OFF)
+if(ENABLE_VSYNC)
+    target_compile_definitions(asteroids PRIVATE ASTEROIDS_VSYNC=1)
+endif()
+
 # ── clang-tidy (applied to project targets only, not FetchContent deps) ───────
 option(ENABLE_CLANG_TIDY "Run clang-tidy during build" ON)
 file(GLOB _CT_HINTS

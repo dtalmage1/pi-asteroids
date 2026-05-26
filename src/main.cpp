@@ -6,6 +6,8 @@
 #include "game/Game.hpp"
 #include "game/Colour.hpp"
 #include <SDL.h>
+#include <iomanip>
+#include <iostream>
 
 int main() {
     ast::Platform platform("Asteroids", 800, 600);
@@ -13,7 +15,12 @@ int main() {
         return 1;
     }
 
-    ast::Sdl2Renderer    renderer(platform.window());
+#ifdef ASTEROIDS_VSYNC
+    static constexpr bool kVsync = true;
+#else
+    static constexpr bool kVsync = false;
+#endif
+    ast::Sdl2Renderer    renderer(platform.window(), kVsync);
     ast::Sdl2InputSource inputSource;
     ast::Sdl2AudioSink   audioSink;
     ast::Game            game(audioSink, renderer.screenSize());
@@ -22,6 +29,11 @@ int main() {
     static constexpr float kMaxDt    = 0.05F;
     const Uint64           freq      = SDL_GetPerformanceFrequency();
     Uint64                 prevTime  = SDL_GetPerformanceCounter();
+
+#ifndef NDEBUG
+    float fpsAccumTime   = 0.0F;
+    int   fpsAccumFrames = 0;
+#endif
 
     bool quit = false;
     while (!quit) {
@@ -43,10 +55,25 @@ int main() {
         game.render(renderer);
         renderer.present();
 
-        const float elapsed = static_cast<float>(SDL_GetPerformanceCounter() - now)
-                            / static_cast<float>(freq);
-        if (elapsed < kTargetDt) {
-            SDL_Delay(static_cast<Uint32>((kTargetDt - elapsed) * 1000.0F));
+#ifndef NDEBUG
+        fpsAccumTime   += dt;
+        fpsAccumFrames += 1;
+        if (fpsAccumTime >= 2.0F) {
+            std::cerr << "FPS: "
+                      << std::fixed << std::setprecision(1)
+                      << (static_cast<float>(fpsAccumFrames) / fpsAccumTime)
+                      << '\n';
+            fpsAccumTime   = 0.0F;
+            fpsAccumFrames = 0;
+        }
+#endif
+
+        if constexpr (!kVsync) {
+            const float elapsed = static_cast<float>(SDL_GetPerformanceCounter() - now)
+                                / static_cast<float>(freq);
+            if (elapsed < kTargetDt) {
+                SDL_Delay(static_cast<Uint32>((kTargetDt - elapsed) * 1000.0F));
+            }
         }
     }
 
