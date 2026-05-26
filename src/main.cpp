@@ -33,6 +33,7 @@ int main() {
         SDL_Event event;
         while (SDL_PollEvent(&event) != 0) {
             if (event.type == SDL_QUIT) { quit = true; }
+            inputSource.handleEvent(event);
         }
 
         const ast::InputState input = inputSource.query();

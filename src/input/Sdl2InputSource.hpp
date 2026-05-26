@@ -20,6 +20,7 @@ public:
     Sdl2InputSource& operator=(Sdl2InputSource&&)      = delete;
 
     InputState query() const override;
+    void handleEvent(const SDL_Event& event);
 
 private:
     std::unique_ptr<SDL_Joystick, SdlJoystickDeleter> joystick_;
