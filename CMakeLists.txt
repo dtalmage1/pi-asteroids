@@ -100,18 +100,21 @@ target_link_libraries(asteroids PRIVATE
 )
 
 # ── clang-tidy (applied to project targets only, not FetchContent deps) ───────
+option(ENABLE_CLANG_TIDY "Run clang-tidy during build" ON)
 file(GLOB _CT_HINTS
     "C:/Program Files/Microsoft Visual Studio/*/*/VC/Tools/Llvm/x64/bin"
     "C:/Program Files/LLVM/bin"
 )
 find_program(CLANG_TIDY_EXE NAMES clang-tidy HINTS ${_CT_HINTS})
-if(CLANG_TIDY_EXE)
+if(CLANG_TIDY_EXE AND ENABLE_CLANG_TIDY)
     message(STATUS "clang-tidy: ${CLANG_TIDY_EXE}")
     set(_CT_CMD "${CLANG_TIDY_EXE}")
     set_target_properties(
         lib_game lib_platform lib_rendering lib_input lib_audio asteroids
         PROPERTIES CXX_CLANG_TIDY "${_CT_CMD}"
     )
+elseif(CLANG_TIDY_EXE)
+    message(STATUS "clang-tidy: found but disabled (ENABLE_CLANG_TIDY=OFF)")
 else()
     message(WARNING "clang-tidy not found — static analysis disabled")
 endif()
