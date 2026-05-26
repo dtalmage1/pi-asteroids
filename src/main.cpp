@@ -8,9 +8,26 @@
 #include <SDL.h>
 #include <iomanip>
 #include <iostream>
+#include <string>
+#include <string_view>
 
-int main() {
-    ast::Platform platform("Asteroids", 800, 600);
+int main(int argc, char* argv[]) {
+    int  winWidth   = 800;
+    int  winHeight  = 600;
+    bool fullscreen = false;
+
+    for (int i = 1; i < argc; ++i) {
+        const std::string_view arg(argv[i]);  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        if (arg == "--width"  && (i + 1) < argc) {
+            winWidth  = std::stoi(argv[++i]);  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        } else if (arg == "--height" && (i + 1) < argc) {
+            winHeight = std::stoi(argv[++i]);  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        } else if (arg == "--fullscreen") {
+            fullscreen = true;
+        }
+    }
+
+    ast::Platform platform("Asteroids", winWidth, winHeight, fullscreen);
     if (platform.window() == nullptr) {
         return 1;
     }

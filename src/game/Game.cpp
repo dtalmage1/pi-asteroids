@@ -133,13 +133,13 @@ int asteroidScore(ast::AsteroidSize size) noexcept {
     return kScoreSmall;
 }
 
-std::vector<ast::Asteroid> spawnChildren(const ast::Asteroid& parent, uint32_t seed) {
+std::vector<ast::Asteroid> spawnChildren(const ast::Asteroid& parent, uint32_t seed, float scale) {
     if (parent.size == ast::AsteroidSize::Small) { return {}; }
     const ast::AsteroidSize childSize = (parent.size == ast::AsteroidSize::Large)
                                         ? ast::AsteroidSize::Medium
                                         : ast::AsteroidSize::Small;
     const float parentSpeed = parent.velocity.length();
-    const float childSpeed  = std::max((parentSpeed * kSplitSpeedMult), kSplitMinSpeed);
+    const float childSpeed  = std::max((parentSpeed * kSplitSpeedMult), kSplitMinSpeed * scale);
     const ast::Vec2 dir = (parentSpeed > 0.0F)
                           ? parent.velocity.normalised()
                           : ast::Vec2{0.0F, -1.0F};
@@ -156,7 +156,7 @@ std::vector<ast::Asteroid> spawnChildren(const ast::Asteroid& parent, uint32_t s
     c0.velocity   = vel1;
     c0.angularVel = parent.angularVel * kSplitAngularMult;
     c0.size       = childSize;
-    c0.shape      = ast::generateAsteroidShape(childSize, 10, seed);
+    c0.shape      = ast::generateAsteroidShape(childSize, 10, seed, scale);
     c0.active     = true;
     children.push_back(std::move(c0));
     ast::Asteroid c1;
@@ -164,7 +164,7 @@ std::vector<ast::Asteroid> spawnChildren(const ast::Asteroid& parent, uint32_t s
     c1.velocity   = vel2;
     c1.angularVel = parent.angularVel * kSplitAngularMult;
     c1.size       = childSize;
-    c1.shape      = ast::generateAsteroidShape(childSize, 10, seed + 1U);
+    c1.shape      = ast::generateAsteroidShape(childSize, 10, seed + 1U, scale);
     c1.active     = true;
     children.push_back(std::move(c1));
     return children;
@@ -187,7 +187,8 @@ std::vector<ast::Vec2> buildAsteroidVertices(const ast::Asteroid& rock) {
 } // namespace
 
 Game::Game(IAudioSink& audio, Vec2 screenSize)
-    : audio_(audio), screenSize_(screenSize), nextExtraLifeScore_(kExtraLifeScore)
+    : audio_(audio), screenSize_(screenSize),
+      scale_(screenSize.y / 600.0F), nextExtraLifeScore_(kExtraLifeScore)
 {
     ship_.position = {screenSize_.x / 2.0F, screenSize_.y / 2.0F};
 }
@@ -231,7 +232,7 @@ void Game::update(float dt, const InputState& input) {
 
         ship_.thrusting = input.thrust;
         if (input.thrust) {
-            ship_.velocity = applyThrust(ship_.velocity, ship_.angle, kThrustAccel, dt);
+            ship_.velocity = applyThrust(ship_.velocity, ship_.angle, kThrustAccel * scale_, dt);
         }
 
         ship_.velocity = applyDrag(ship_.velocity, kShipDrag, dt);
@@ -281,8 +282,8 @@ void Game::tryFire(const InputState& input) {
     }
     if (slot != nullptr) {
         const Vec2 nose{std::sin(ship_.angle), -std::cos(ship_.angle)};
-        slot->position = ship_.position + (nose * kShipNoseOffset);
-        slot->velocity = ship_.velocity + (nose * kProjectileSpeed);
+        slot->position = ship_.position + (nose * (kShipNoseOffset * scale_));
+        slot->velocity = ship_.velocity + (nose * (kProjectileSpeed * scale_));
         slot->lifetime = kProjectileLifetime;
         slot->owner    = ProjectileOwner::Player;
         slot->active   = true;
@@ -310,15 +311,15 @@ void Game::spawnSaucer() {
     const float y        = (screenSize_.y * 0.1F) + (yFrac * (screenSize_.y * 0.8F));
     const bool isSmall   = (waveNumber_ >= 2) && ((rng() % 2U) == 0U);
     saucer_.size      = isSmall ? SaucerSize::Small : SaucerSize::Large;
-    const float r        = Saucer::radius(saucer_.size);
+    const float r        = Saucer::radius(saucer_.size) * scale_;
     saucer_.active    = true;
     saucer_.fireTimer = kSaucerFireInterval;
     if (fromRight) {
         saucer_.position = {screenSize_.x + r, y};
-        saucer_.velocity = {-kLargeSaucerSpeed, 0.0F};
+        saucer_.velocity = {-(kLargeSaucerSpeed * scale_), 0.0F};
     } else {
         saucer_.position = {-r, y};
-        saucer_.velocity = {kLargeSaucerSpeed, 0.0F};
+        saucer_.velocity = {kLargeSaucerSpeed * scale_, 0.0F};
     }
 }
 
@@ -345,7 +346,7 @@ void Game::fireSaucerProjectile() {
     }
     const Vec2  dir{std::sin(angle), -std::cos(angle)};
     slot->position = saucer_.position;
-    slot->velocity = dir * kSaucerProjectileSpeed;
+    slot->velocity = dir * (kSaucerProjectileSpeed * scale_);
     slot->lifetime = kProjectileLifetime;
     slot->owner    = ProjectileOwner::Saucer;
     slot->active   = true;
@@ -362,7 +363,7 @@ void Game::tickSaucer(float dt) {
             saucer_.fireTimer = kSaucerFireInterval;
             fireSaucerProjectile();
         }
-        const float r = Saucer::radius(saucer_.size);
+        const float r = Saucer::radius(saucer_.size) * scale_;
         if ((saucer_.position.x < (-r)) || (saucer_.position.x > (screenSize_.x + r))) {
             saucer_.active    = false;
             saucerSpawnTimer_ = kSaucerSpawnInterval;
@@ -381,8 +382,8 @@ void Game::checkCollisions() {
         if (!p.active || p.owner != ProjectileOwner::Player) { continue; }
         for (auto& rock : asteroids_) {
             if (!rock.active) { continue; }
-            if (circlesOverlap(p.position, kProjectileRadius,
-                               rock.position, Asteroid::radius(rock.size))) {
+            if (circlesOverlap(p.position, kProjectileRadius * scale_,
+                               rock.position, Asteroid::radius(rock.size) * scale_)) {
                 p.active      = false;
                 spawnExplosion(rock.position, kAsteroidParticleCount);
                 score_       += asteroidScore(rock.size);
@@ -390,7 +391,7 @@ void Game::checkCollisions() {
                     nextExtraLifeScore_ += kExtraLifeScore;
                     ++lives_;
                 }
-                auto children = spawnChildren(rock, splitSeed_);
+                auto children = spawnChildren(rock, splitSeed_, scale_);
                 splitSeed_   += 2U;
                 for (auto& child : children) { spawned.push_back(std::move(child)); }
                 rock.active   = false;
@@ -405,8 +406,8 @@ void Game::checkSaucerCollisions() {
     if (!saucer_.active) { return; }
     for (auto& p : projectiles_) {
         if (!p.active || p.owner != ProjectileOwner::Player) { continue; }
-        if (circlesOverlap(p.position, kProjectileRadius,
-                           saucer_.position, Saucer::radius(saucer_.size))) {
+        if (circlesOverlap(p.position, kProjectileRadius * scale_,
+                           saucer_.position, Saucer::radius(saucer_.size) * scale_)) {
             p.active          = false;
             saucer_.active    = false;
             saucerSpawnTimer_ = kSaucerSpawnInterval;
@@ -426,8 +427,8 @@ void Game::checkShipCollisions() {
     if (!ship_.active || ship_.invincTimer > 0.0F) { return; }
     for (const auto& rock : asteroids_) {
         if (!rock.active) { continue; }
-        if (circlesOverlap(ship_.position, Ship::kRadius,
-                           rock.position, Asteroid::radius(rock.size))) {
+        if (circlesOverlap(ship_.position, Ship::kRadius * scale_,
+                           rock.position, Asteroid::radius(rock.size) * scale_)) {
             killShip();
             return;
         }
@@ -465,15 +466,16 @@ void Game::checkSaucerVsShipCollisions() {
     if (!ship_.active || ship_.invincTimer > 0.0F) { return; }
     for (auto& p : projectiles_) {
         if (!p.active || p.owner != ProjectileOwner::Saucer) { continue; }
-        if (circlesOverlap(p.position, kProjectileRadius, ship_.position, Ship::kRadius)) {
+        if (circlesOverlap(p.position, kProjectileRadius * scale_,
+                           ship_.position, Ship::kRadius * scale_)) {
             p.active = false;
             killShip();
             return;
         }
     }
     if (saucer_.active) {
-        if (circlesOverlap(saucer_.position, Saucer::radius(saucer_.size),
-                           ship_.position, Ship::kRadius)) {
+        if (circlesOverlap(saucer_.position, Saucer::radius(saucer_.size) * scale_,
+                           ship_.position, Ship::kRadius * scale_)) {
             killShip();
         }
     }
@@ -504,7 +506,7 @@ void Game::spawnExplosion(Vec2 pos, int count) {
         if (spawned >= count) { break; }
         if (p.active) { continue; }
         const float angle    = randFloat(0.0F, (2.0F * kPi));
-        const float speed    = randFloat(kParticleSpeedMin, kParticleSpeedMax);
+        const float speed    = randFloat(kParticleSpeedMin * scale_, kParticleSpeedMax * scale_);
         p.position    = pos;
         p.velocity    = Vec2{std::sin(angle), -std::cos(angle)} * speed;
         p.lifetime    = randFloat(kParticleLifetimeMin, kParticleLifetimeMax);
@@ -561,7 +563,7 @@ void Game::render(IRenderer& renderer) const {
             (std::fmod(ship_.invincTimer, (2.0F * kFlashPeriod)) < kFlashPeriod);
         if (showShip) {
             renderer.drawLineStrip(
-                buildShipVertices(ship_.position, ship_.angle),
+                buildShipVertices(ship_.position, ship_.angle, scale_),
                 Colour{255, 255, 255, 255},
                 true);
         }
@@ -574,7 +576,7 @@ void Game::render(IRenderer& renderer) const {
             true);
     }
     if (saucer_.active) {
-        const float r = Saucer::radius(saucer_.size);
+        const float r = Saucer::radius(saucer_.size) * scale_;
         renderer.drawLineStrip(scaledVerts(kSaucerBody, saucer_.position, r),
                                Colour{255, 255, 255, 255}, true);
         renderer.drawLineStrip(scaledVerts(kSaucerDome, saucer_.position, r),
@@ -583,10 +585,9 @@ void Game::render(IRenderer& renderer) const {
     for (const auto& p : projectiles_) {
         if (!p.active) { continue; }
         const Vec2 dir = p.velocity.normalised();
-        const Vec2 a{p.position.x - (dir.x * kProjectileHalfLen),
-                     p.position.y - (dir.y * kProjectileHalfLen)};
-        const Vec2 b{p.position.x + (dir.x * kProjectileHalfLen),
-                     p.position.y + (dir.y * kProjectileHalfLen)};
+        const float phl = kProjectileHalfLen * scale_;
+        const Vec2  a{p.position.x - (dir.x * phl), p.position.y - (dir.y * phl)};
+        const Vec2  b{p.position.x + (dir.x * phl), p.position.y + (dir.y * phl)};
         renderer.drawLine(a, b, Colour{255, 255, 255, 255});
     }
 
@@ -594,10 +595,9 @@ void Game::render(IRenderer& renderer) const {
         if (!p.active) { continue; }
         const auto  alpha = static_cast<std::uint8_t>(255.0F * (p.lifetime / p.maxLifetime));
         const Vec2  dir   = p.velocity.normalised();
-        const Vec2  pa{p.position.x - (dir.x * kParticleHalfLen),
-                       p.position.y - (dir.y * kParticleHalfLen)};
-        const Vec2  pb{p.position.x + (dir.x * kParticleHalfLen),
-                       p.position.y + (dir.y * kParticleHalfLen)};
+        const float pthl = kParticleHalfLen * scale_;
+        const Vec2  pa{p.position.x - (dir.x * pthl), p.position.y - (dir.y * pthl)};
+        const Vec2  pb{p.position.x + (dir.x * pthl), p.position.y + (dir.y * pthl)};
         renderer.drawLine(pa, pb, Colour{255, 255, 255, alpha});
     }
 
@@ -605,19 +605,20 @@ void Game::render(IRenderer& renderer) const {
         const float charH = screenSize_.y * kHudCharHeightFrac;
 
         // Score — top-left
+        const float           hudMargin = kHudMargin * scale_;
         const std::string scoreStr = std::to_string(score_);
         drawString(renderer,
-                   Vec2{kHudMargin, kHudMargin},
+                   Vec2{hudMargin, hudMargin},
                    charH, scoreStr, Colour{255, 255, 255, 255});
 
         // Lives icons — top-right, small ship silhouettes pointing up
         const float iconScale = charH / kShipIconSpan;
         const float iconStep  = charH;
         for (int i = 0; i < lives_; ++i) {
-            const float cx = screenSize_.x - kHudMargin
+            const float cx = screenSize_.x - hudMargin
                              - (charH * kIconHalfWidthFrac)
                              - (static_cast<float>(i) * iconStep);
-            const float cy = kHudMargin + (charH * kIconNoseFrac);
+            const float cy = hudMargin + (charH * kIconNoseFrac);
             renderer.drawLineStrip(
                 buildShipVertices({cx, cy}, 0.0F, iconScale),
                 Colour{255, 255, 255, 255},
@@ -711,14 +712,15 @@ void Game::startWave() {
         }
 
         const float angle = randFloat(0.0F, (2.0F * kPi));
-        const float speed = randFloat(kAsteroidMinSpeed, kAsteroidMaxSpeed);
+        const float speed = randFloat(kAsteroidMinSpeed * scale_, kAsteroidMaxSpeed * scale_);
         const float sinA  = std::sin(angle);
         const float cosA  = std::cos(angle);
         rock.velocity     = Vec2{sinA, -cosA} * speed;
         rock.angularVel   = randFloat(-kAsteroidAngularVelMax, kAsteroidAngularVelMax);
         rock.size         = AsteroidSize::Large;
         rock.shape        = generateAsteroidShape(AsteroidSize::Large, 10,
-                                                   waveSeed_ + static_cast<std::uint32_t>(i));
+                                                   waveSeed_ + static_cast<std::uint32_t>(i),
+                                                   scale_);
         rock.active       = true;
         asteroids_.push_back(rock);
     }

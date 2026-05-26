@@ -10,10 +10,11 @@ float Asteroid::radius(AsteroidSize s) noexcept {
     return kRadiusSmall;
 }
 
-std::vector<Vec2> generateAsteroidShape(AsteroidSize size, int vertices, uint32_t seed) {
+std::vector<Vec2> generateAsteroidShape(AsteroidSize size, int vertices, uint32_t seed,
+                                        float scale) {
     constexpr float kTwoPi     = 6.28318530F;
     constexpr float kJitterFrac = 0.2F;
-    const float baseRadius = Asteroid::radius(size);
+    const float baseRadius = Asteroid::radius(size) * scale;
 
     std::minstd_rand rng(seed);
     std::uniform_real_distribution<float> jitter(
