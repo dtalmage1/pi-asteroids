@@ -105,6 +105,14 @@ target_link_libraries(asteroids PRIVATE
     SDL2::SDL2-static
 )
 
+# ── Copy audio assets next to the executable ──────────────────────────────────
+add_custom_command(TARGET asteroids POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/assets/audio
+        $<TARGET_FILE_DIR:asteroids>/assets/audio
+    COMMENT "Copying audio assets"
+)
+
 # ── vsync ─────────────────────────────────────────────────────────────────────
 option(ENABLE_VSYNC "Enable SDL2 vsync (SDL_RENDERER_PRESENTVSYNC)" OFF)
 if(ENABLE_VSYNC)
