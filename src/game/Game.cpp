@@ -233,6 +233,9 @@ void Game::update(float dt, const InputState& input) {
         ship_.thrusting = input.thrust;
         if (input.thrust) {
             ship_.velocity = applyThrust(ship_.velocity, ship_.angle, kThrustAccel * scale_, dt);
+            audio_.loop(SoundId::Thrust);
+        } else {
+            audio_.stop(SoundId::Thrust);
         }
 
         ship_.velocity = applyDrag(ship_.velocity, kShipDrag, dt);
@@ -287,6 +290,7 @@ void Game::tryFire(const InputState& input) {
         slot->lifetime = kProjectileLifetime;
         slot->owner    = ProjectileOwner::Player;
         slot->active   = true;
+        audio_.play(SoundId::Fire);
     }
 }
 
@@ -395,6 +399,8 @@ void Game::checkCollisions() {
                 splitSeed_   += 2U;
                 for (auto& child : children) { spawned.push_back(std::move(child)); }
                 rock.active   = false;
+                audio_.play(rock.size == AsteroidSize::Large ? SoundId::ExplosionLarge
+                                                             : SoundId::ExplosionSmall);
                 break;
             }
         }
@@ -417,6 +423,7 @@ void Game::checkSaucerCollisions() {
                 nextExtraLifeScore_ += kExtraLifeScore;
                 ++lives_;
             }
+            audio_.play(SoundId::ExplosionLarge);
             return;
         }
     }
@@ -459,6 +466,8 @@ void Game::killShip() {
     --lives_;
     respawnTimer_ = kRespawnDelay;
     state_        = GameState::PlayerDead;
+    audio_.stop(SoundId::Thrust);
+    audio_.play(SoundId::ExplosionLarge);
 }
 
 void Game::checkSaucerVsShipCollisions() {
