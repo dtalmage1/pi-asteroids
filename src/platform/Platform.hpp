@@ -11,7 +11,7 @@ struct SdlWindowDeleter {
 
 class Platform {
 public:
-    Platform(const char* title, int width, int height);
+    Platform(const char* title, int width, int height, bool fullscreen = false);
     ~Platform();
 
     Platform(const Platform&)            = delete;

@@ -26,6 +26,7 @@ struct Asteroid {
 // Generate a randomised local-space polygon for an asteroid.
 // vertices: number of vertices (8–12 typical).
 // seed: controls jitter; same seed always produces the same shape.
-std::vector<Vec2> generateAsteroidShape(AsteroidSize size, int vertices, uint32_t seed);
+std::vector<Vec2> generateAsteroidShape(AsteroidSize size, int vertices, uint32_t seed,
+                                        float scale = 1.0F);
 
 } // namespace ast

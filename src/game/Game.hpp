@@ -63,6 +63,7 @@ private:
 
     IAudioSink&           audio_;
     Vec2                  screenSize_;
+    float                 scale_;
     GameState             state_          = GameState::Attract;
     ScoreTable            scoreTable_;
     Ship                  ship_;
