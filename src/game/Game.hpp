@@ -35,6 +35,7 @@ public:
     int       lives() const noexcept;
 
     void spawnAsteroid(Asteroid a);
+    void spawnProjectile(Projectile p);
     const std::vector<Asteroid>& asteroids() const noexcept;
     const std::array<Projectile, kMaxProjectiles>& projectiles() const noexcept;
     const std::array<Particle,   kMaxParticles>&   particles()   const noexcept;
@@ -45,8 +46,10 @@ private:
     void tryFire(const InputState& input);
     void tryHyperspace(const InputState& input);
     void spawnSaucer();
+    void fireSaucerProjectile();
     void tickSaucer(float dt);
     void checkCollisions();
+    void checkSaucerCollisions();
     void checkShipCollisions();
     void spawnExplosion(Vec2 pos, int count);
     void tickParticles(float dt);
@@ -69,6 +72,7 @@ private:
     Saucer                saucer_           {};
     float                 saucerSpawnTimer_ = 0.0F;
     std::uint32_t         saucerSeed_       = 0U;
+    std::uint32_t         saucerFireSeed_   = 0U;
     int                   score_          = 0;
     int                   waveNumber_     = 0;
     float                 interWaveTimer_ = 0.0F;
