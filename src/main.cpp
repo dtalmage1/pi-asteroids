@@ -37,7 +37,10 @@ int main(int argc, char* argv[]) {
 #else
     static constexpr bool kVsync = false;
 #endif
-    ast::Sdl2Renderer    renderer(platform.window(), kVsync);
+    ast::Sdl2Renderer renderer(platform.window(), kVsync);
+    if (!renderer.isOk()) {
+        return 1;
+    }
     ast::Sdl2InputSource inputSource;
     ast::Sdl2AudioSink   audioSink;
     ast::Game            game(audioSink, renderer.screenSize());
