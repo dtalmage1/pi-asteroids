@@ -23,6 +23,8 @@ public:
     Sdl2Renderer(Sdl2Renderer&&)                 = delete;
     Sdl2Renderer& operator=(Sdl2Renderer&&)      = delete;
 
+    bool isOk() const noexcept;
+
     void clear(Colour background) override;
     void drawLine(Vec2 a, Vec2 b, Colour c) override;
     void drawLineStrip(const std::vector<Vec2>& points, Colour c, bool closed) override;
