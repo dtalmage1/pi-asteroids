@@ -133,6 +133,12 @@ int asteroidScore(ast::AsteroidSize size) noexcept {
     return kScoreSmall;
 }
 
+ast::SoundId explosionSound(ast::AsteroidSize size) noexcept {
+    if (size == ast::AsteroidSize::Large)  { return ast::SoundId::ExplosionLarge;  }
+    if (size == ast::AsteroidSize::Medium) { return ast::SoundId::ExplosionMedium; }
+    return ast::SoundId::ExplosionSmall;
+}
+
 std::vector<ast::Asteroid> spawnChildren(const ast::Asteroid& parent, uint32_t seed, float scale) {
     if (parent.size == ast::AsteroidSize::Small) { return {}; }
     const ast::AsteroidSize childSize = (parent.size == ast::AsteroidSize::Large)
@@ -354,6 +360,7 @@ void Game::fireSaucerProjectile() {
     slot->lifetime = kProjectileLifetime;
     slot->owner    = ProjectileOwner::Saucer;
     slot->active   = true;
+    audio_.play(SoundId::SaucerFire);
 }
 
 void Game::tickSaucer(float dt) {
@@ -367,10 +374,16 @@ void Game::tickSaucer(float dt) {
             saucer_.fireTimer = kSaucerFireInterval;
             fireSaucerProjectile();
         }
+        const SoundId engineSound = (saucer_.size == SaucerSize::Small)
+                                        ? SoundId::SaucerEngineSmall
+                                        : SoundId::SaucerEngine;
+        audio_.loop(engineSound);
         const float r = Saucer::radius(saucer_.size) * scale_;
         if ((saucer_.position.x < (-r)) || (saucer_.position.x > (screenSize_.x + r))) {
             saucer_.active    = false;
             saucerSpawnTimer_ = kSaucerSpawnInterval;
+            audio_.stop(SoundId::SaucerEngine);
+            audio_.stop(SoundId::SaucerEngineSmall);
         }
     } else {
         saucerSpawnTimer_ -= dt;
@@ -399,8 +412,7 @@ void Game::checkCollisions() {
                 splitSeed_   += 2U;
                 for (auto& child : children) { spawned.push_back(std::move(child)); }
                 rock.active   = false;
-                audio_.play(rock.size == AsteroidSize::Large ? SoundId::ExplosionLarge
-                                                             : SoundId::ExplosionSmall);
+                audio_.play(explosionSound(rock.size));
                 break;
             }
         }
@@ -423,6 +435,8 @@ void Game::checkSaucerCollisions() {
                 nextExtraLifeScore_ += kExtraLifeScore;
                 ++lives_;
             }
+            audio_.stop(SoundId::SaucerEngine);
+            audio_.stop(SoundId::SaucerEngineSmall);
             audio_.play(SoundId::ExplosionLarge);
             return;
         }

@@ -10,15 +10,17 @@
 namespace {
 
 // WAV filename for each SoundId (index = static_cast<int>(SoundId)).
-constexpr std::array<const char*, 8> kFiles{{
-    "thrust.wav",           // SoundId::Thrust
-    "fire.wav",             // SoundId::Fire
-    "explosion_small.wav",  // SoundId::ExplosionSmall
-    "explosion_large.wav",  // SoundId::ExplosionLarge
-    "saucer_large.wav",     // SoundId::SaucerEngine
-    "saucer_fire.wav",      // SoundId::SaucerFire
-    "beat_low.wav",         // SoundId::BeatLow
-    "beat_high.wav",        // SoundId::BeatHigh
+constexpr std::array<const char*, 10> kFiles{{
+    "thrust.wav",       // 0  SoundId::Thrust
+    "fire.wav",         // 1  SoundId::Fire
+    "bangSmall.wav",    // 2  SoundId::ExplosionSmall
+    "bangLarge.wav",    // 3  SoundId::ExplosionLarge
+    "saucerBig.wav",    // 4  SoundId::SaucerEngine
+    "saucer_fire.wav",  // 5  SoundId::SaucerFire
+    "beat1.wav",        // 6  SoundId::BeatLow
+    "beat2.wav",        // 7  SoundId::BeatHigh
+    "bangMedium.wav",   // 8  SoundId::ExplosionMedium
+    "saucerSmall.wav",  // 9  SoundId::SaucerEngineSmall
 }};
 
 struct SdlStringDeleter {

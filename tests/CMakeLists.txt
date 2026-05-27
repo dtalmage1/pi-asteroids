@@ -35,6 +35,7 @@ add_executable(unit_tests
     unit/HotplugTest.cpp
     unit/ScaleTest.cpp
     unit/AudioEventTest.cpp
+    unit/SaucerAudioTest.cpp
 )
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 target_link_libraries(unit_tests PRIVATE

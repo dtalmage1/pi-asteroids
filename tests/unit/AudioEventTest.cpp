@@ -84,6 +84,34 @@ TEST(AudioEvent, SmallAsteroidPlaysSmallExplosion) {
     tickFrames(game, 1);
 }
 
+// Destroying a Medium asteroid plays ExplosionMedium.
+TEST(AudioEvent, MediumAsteroidPlaysMediumExplosion) {
+    testing::NiceMock<ast::MockAudioSink> audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+
+    constexpr ast::Vec2 kPos{400.0F, 200.0F};
+
+    ast::Asteroid rock;
+    rock.position = kPos;
+    rock.size     = ast::AsteroidSize::Medium;
+    rock.shape    = ast::generateAsteroidShape(ast::AsteroidSize::Medium, 10, 1U);
+    rock.active   = true;
+    game.spawnAsteroid(rock);
+
+    ast::Projectile p;
+    p.position = kPos;
+    p.velocity  = {0.0F, 0.0F};
+    p.lifetime  = 1.0F;
+    p.owner     = ast::ProjectileOwner::Player;
+    p.active    = true;
+    game.spawnProjectile(p);
+
+    EXPECT_CALL(audio, play(ast::SoundId::ExplosionMedium)).Times(1);
+
+    tickFrames(game, 1);
+}
+
 // Destroying a Large asteroid plays ExplosionLarge.
 TEST(AudioEvent, LargeAsteroidPlaysLargeExplosion) {
     testing::NiceMock<ast::MockAudioSink> audio;
