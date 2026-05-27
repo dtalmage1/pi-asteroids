@@ -133,6 +133,16 @@ int asteroidScore(ast::AsteroidSize size) noexcept {
     return kScoreSmall;
 }
 
+// Returns the beat interval (seconds) for the given number of active asteroids.
+// Interval shrinks linearly as rocks are destroyed, creating tension.
+float beatInterval(int count) noexcept {
+    constexpr float kMax = 0.9F;
+    constexpr float kMin = 0.25F;
+    constexpr int   kRef = 28;  // 4 large fully split = max visible in wave 1
+    const float t = std::min(1.0F, static_cast<float>(count) / static_cast<float>(kRef));
+    return kMin + (t * (kMax - kMin));
+}
+
 ast::SoundId explosionSound(ast::AsteroidSize size) noexcept {
     if (size == ast::AsteroidSize::Large)  { return ast::SoundId::ExplosionLarge;  }
     if (size == ast::AsteroidSize::Medium) { return ast::SoundId::ExplosionMedium; }
@@ -220,6 +230,8 @@ void Game::update(float dt, const InputState& input) {
         interWaveTimer_     = kInterWaveDelay;
         prevAllClear_       = true;
         waveSeed_           = 1000U;
+        beatTimer_          = 0.0F;
+        beatPhase_          = false;
         lives_              = kInitialLives;
         respawnTimer_       = 0.0F;
         particles_          = {};
@@ -279,6 +291,7 @@ void Game::update(float dt, const InputState& input) {
     tickParticles(dt);
     tickSaucer(dt);
     tickWave(dt);
+    tickBeat(dt);
     tickRespawn(dt);
     tickGameOver(dt);
 }
@@ -712,6 +725,8 @@ void Game::tickWave(float dt) {
 }
 
 void Game::startWave() {
+    beatTimer_ = 0.0F;
+    beatPhase_ = false;
     const int count = waveAsteroidCount(waveNumber_);
     std::minstd_rand rng(waveSeed_);
 
@@ -763,5 +778,18 @@ int Game::score() const noexcept { return score_; }
 int Game::waveNumber() const noexcept { return waveNumber_; }
 
 int Game::lives() const noexcept { return lives_; }
+
+void Game::tickBeat(float dt) {
+    if (state_ != GameState::Playing) { return; }
+    const int count = static_cast<int>(std::count_if(
+        asteroids_.begin(), asteroids_.end(),
+        [](const Asteroid& a) { return a.active; }));
+    if (count == 0) { return; }
+    beatTimer_ -= dt;
+    if (beatTimer_ > 0.0F) { return; }
+    audio_.play(beatPhase_ ? SoundId::BeatHigh : SoundId::BeatLow);
+    beatPhase_ = !beatPhase_;
+    beatTimer_ = beatInterval(count);
+}
 
 } // namespace ast
