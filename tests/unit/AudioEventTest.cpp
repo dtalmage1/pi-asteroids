@@ -107,6 +107,7 @@ TEST(AudioEvent, MediumAsteroidPlaysMediumExplosion) {
     p.active    = true;
     game.spawnProjectile(p);
 
+    EXPECT_CALL(audio, play(testing::_)).Times(testing::AnyNumber());
     EXPECT_CALL(audio, play(ast::SoundId::ExplosionMedium)).Times(1);
 
     tickFrames(game, 1);
@@ -135,6 +136,7 @@ TEST(AudioEvent, LargeAsteroidPlaysLargeExplosion) {
     p.active    = true;
     game.spawnProjectile(p);
 
+    EXPECT_CALL(audio, play(testing::_)).Times(testing::AnyNumber());
     EXPECT_CALL(audio, play(ast::SoundId::ExplosionLarge)).Times(1);
 
     tickFrames(game, 1);

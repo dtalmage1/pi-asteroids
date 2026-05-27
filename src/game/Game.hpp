@@ -57,6 +57,7 @@ private:
     void spawnExplosion(Vec2 pos, int count);
     void tickParticles(float dt);
     void tickWave(float dt);
+    void tickBeat(float dt);
     void startWave();
     void tickRespawn(float dt);
     void tickGameOver(float dt);
@@ -86,6 +87,8 @@ private:
     float                 respawnTimer_       = 0.0F;
     int                   nextExtraLifeScore_ = 0;
     float                 gameOverTimer_      = 0.0F;
+    float                 beatTimer_          = 0.0F;
+    bool                  beatPhase_          = false;
 };
 
 } // namespace ast
