@@ -70,6 +70,18 @@ TEST(SaucerAudio, EngineStopsWhenShot) {
     tickFrames(game, 1);
 }
 
+// Small saucer engine loops SaucerEngineSmall (not SaucerEngine).
+TEST(SaucerAudio, SmallSaucerLoopsSmallEngineSound) {
+    testing::NiceMock<ast::MockAudioSink> audio;
+    ast::Game game(audio, {800.0F, 600.0F});
+    startGame(game);
+    game.activateSaucer(ast::SaucerSize::Small, {400.0F, 300.0F});
+
+    EXPECT_CALL(audio, loop(ast::SoundId::SaucerEngineSmall)).Times(testing::AtLeast(1));
+
+    tickFrames(game, 1);
+}
+
 // Saucer firing plays the SaucerFire sound.
 TEST(SaucerAudio, FirePlaysSFX) {
     testing::NiceMock<ast::MockAudioSink> audio;

@@ -11,6 +11,8 @@ enum class SoundId {
     SaucerFire,
     BeatLow,
     BeatHigh,
+    ExplosionMedium,
+    SaucerEngineSmall,
 };
 
 } // namespace ast

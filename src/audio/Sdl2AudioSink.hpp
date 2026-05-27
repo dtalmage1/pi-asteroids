@@ -22,7 +22,7 @@ public:
     bool isPlaying(SoundId id) const override;
 
 private:
-    static constexpr std::size_t kSoundCount = 8;
+    static constexpr std::size_t kSoundCount = 10;
     static int soundIndex(SoundId id) noexcept;
 
     bool initialised_ = false;
