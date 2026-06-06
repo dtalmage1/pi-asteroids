@@ -9,9 +9,12 @@ void SdlWindowDeleter::operator()(SDL_Window* w) const {
 }
 
 Platform::Platform(const char* title, int width, int height, bool fullscreen) {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << '\n';
         return;
+    }
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+        std::cerr << "SDL audio init failed: " << SDL_GetError() << " (audio disabled)\n";
     }
     const Uint32 flags = fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0U;
     window_.reset(SDL_CreateWindow(

@@ -14,9 +14,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 
 # ── SDL2 ──────────────────────────────────────────────────────────────────────
-set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON  CACHE BOOL "" FORCE)
-set(SDL_TEST   OFF CACHE BOOL "" FORCE)
+set(SDL_SHARED OFF  CACHE BOOL "" FORCE)
+set(SDL_STATIC ON   CACHE BOOL "" FORCE)
+set(SDL_TEST   OFF  CACHE BOOL "" FORCE)
+set(SDL_ALSA   ON   CACHE BOOL "" FORCE)
+set(SDL_ALSA_SHARED OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(SDL2
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
