@@ -110,13 +110,27 @@ constexpr std::array<ast::Vec2, 4> kShipShape{{
     { 0.0F,   4.0F},  // tail notch
     {-9.0F,   9.0F},  // left wing
 }};
+// Thrust exhaust flame — open V behind the tail notch; two sizes for flicker.
+constexpr std::array<ast::Vec2, 3> kFlameSmall{{
+    {-4.0F,  9.0F},   // left exhaust
+    { 0.0F, 16.0F},   // tip
+    { 4.0F,  9.0F},   // right exhaust
+}};
+constexpr std::array<ast::Vec2, 3> kFlameLarge{{
+    {-4.0F,  9.0F},   // left exhaust
+    { 0.0F, 22.0F},   // tip
+    { 4.0F,  9.0F},   // right exhaust
+}};
 
-std::vector<ast::Vec2> buildShipVertices(ast::Vec2 pos, float angle, float scale = 1.0F) {
+template<std::size_t N>
+std::vector<ast::Vec2> buildRotatedVerts(
+    const std::array<ast::Vec2, N>& shape, ast::Vec2 pos, float angle, float scale)
+{
     const float cosA = std::cos(angle);
     const float sinA = std::sin(angle);
     std::vector<ast::Vec2> verts;
-    verts.reserve(kShipShape.size());
-    for (const auto& v : kShipShape) {
+    verts.reserve(N);
+    for (const auto& v : shape) {
         const float sx = v.x * scale;
         const float sy = v.y * scale;
         verts.push_back({
@@ -125,6 +139,10 @@ std::vector<ast::Vec2> buildShipVertices(ast::Vec2 pos, float angle, float scale
         });
     }
     return verts;
+}
+
+std::vector<ast::Vec2> buildShipVertices(ast::Vec2 pos, float angle, float scale = 1.0F) {
+    return buildRotatedVerts(kShipShape, pos, angle, scale);
 }
 
 int asteroidScore(ast::AsteroidSize size) noexcept {
@@ -236,6 +254,9 @@ void Game::update(float dt, const InputState& input) {
         respawnTimer_       = 0.0F;
         particles_          = {};
         nextExtraLifeScore_ = kExtraLifeScore;
+        prevFireInput_       = false;
+        prevHyperspaceInput_ = false;
+        frameCount_          = 0U;
     }
 
     if (state_ == GameState::GameOver && input.start) {
@@ -294,10 +315,14 @@ void Game::update(float dt, const InputState& input) {
     tickBeat(dt);
     tickRespawn(dt);
     tickGameOver(dt);
+
+    ++frameCount_;
+    prevFireInput_       = input.fire;
+    prevHyperspaceInput_ = input.hyperspace;
 }
 
 void Game::tryFire(const InputState& input) {
-    if (!input.fire) { return; }
+    if (!input.fire || prevFireInput_) { return; }  // fire on rising edge only
     Projectile* slot = nullptr;
     for (auto& candidate : projectiles_) {
         if (!candidate.active) { slot = &candidate; break; }
@@ -314,7 +339,7 @@ void Game::tryFire(const InputState& input) {
 }
 
 void Game::tryHyperspace(const InputState& input) {
-    if (!input.hyperspace) { return; }
+    if (!input.hyperspace || prevHyperspaceInput_) { return; }  // fire on rising edge only
     ++hyperspaceSeed_;
     std::minstd_rand rng(hyperspaceSeed_);
     const bool dies = ((rng() % kHyperspaceDeathOdds) == 0U);
@@ -598,18 +623,28 @@ void Game::tickGameOver(float dt) {
     }
 }
 
-void Game::render(IRenderer& renderer) const {
-    if (ship_.active) {
-        const bool showShip =
-            (ship_.invincTimer <= 0.0F) ||
-            (std::fmod(ship_.invincTimer, (2.0F * kFlashPeriod)) < kFlashPeriod);
-        if (showShip) {
-            renderer.drawLineStrip(
-                buildShipVertices(ship_.position, ship_.angle, scale_),
-                Colour{255, 255, 255, 255},
-                true);
-        }
+void Game::renderShip(IRenderer& renderer) const {
+    if (!ship_.active) { return; }
+    const bool showShip =
+        (ship_.invincTimer <= 0.0F) ||
+        (std::fmod(ship_.invincTimer, (2.0F * kFlashPeriod)) < kFlashPeriod);
+    if (!showShip) { return; }
+    renderer.drawLineStrip(
+        buildShipVertices(ship_.position, ship_.angle, scale_),
+        Colour{255, 255, 255, 255},
+        true);
+    if (ship_.thrusting) {
+        const bool flameLarge = (frameCount_ % 4U) < 2U;
+        renderer.drawLineStrip(
+            buildRotatedVerts(flameLarge ? kFlameLarge : kFlameSmall,
+                              ship_.position, ship_.angle, scale_),
+            Colour{255, 255, 255, 255},
+            false);
     }
+}
+
+void Game::render(IRenderer& renderer) const {
+    renderShip(renderer);
     for (const auto& rock : asteroids_) {
         if (!rock.active || rock.shape.empty()) { continue; }
         renderer.drawLineStrip(

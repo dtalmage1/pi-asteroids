@@ -10,6 +10,8 @@ void doHyperspace(ast::Game& game) {
     ast::InputState input;
     input.hyperspace = true;
     game.update(1.0F / 60.0F, input);
+    const ast::InputState noInput;
+    game.update(1.0F / 60.0F, noInput); // release — required for rising-edge detection
 }
 
 } // namespace

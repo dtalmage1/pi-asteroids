@@ -97,13 +97,15 @@ TEST(Score, ScoreAccumulates) {
     rock2.active   = true;
     game.spawnAsteroid(rock2);
 
-    // Fire twice on consecutive frames
+    // Fire twice — release between shots for rising-edge detection
+    const ast::InputState noInput;
     ast::InputState fireInput;
     fireInput.fire = true;
     game.update(1.0F / 60.0F, fireInput);
+    game.update(1.0F / 60.0F, noInput);
     game.update(1.0F / 60.0F, fireInput);
+    game.update(1.0F / 60.0F, noInput);
 
-    const ast::InputState noInput;
     for (int i = 0; i < 40; ++i) { game.update(1.0F / 60.0F, noInput); }
 
     EXPECT_EQ(game.score(), 200);

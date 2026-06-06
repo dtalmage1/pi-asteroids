@@ -46,6 +46,7 @@ public:
 private:
     void tryFire(const InputState& input);
     void tryHyperspace(const InputState& input);
+    void renderShip(IRenderer& renderer) const;
     void killShip();
     void spawnSaucer();
     void fireSaucerProjectile();
@@ -89,6 +90,9 @@ private:
     float                 gameOverTimer_      = 0.0F;
     float                 beatTimer_          = 0.0F;
     bool                  beatPhase_          = false;
+    bool                  prevFireInput_      = false;
+    bool                  prevHyperspaceInput_= false;
+    std::uint32_t         frameCount_         = 0U;
 };
 
 } // namespace ast
