@@ -114,8 +114,8 @@ SHANWAN Android Gamepad (OQ-2 resolved: no config file in v1.0):
 |--------|-------|
 | Rotate left  | Left joystick axis 0 < -8000 |
 | Rotate right | Left joystick axis 0 > +8000 |
-| Thrust       | Left joystick axis 1 < -8000 (up = negative Y) |
-| Fire         | Button 1 — BtnB (O / right face) |
+| Thrust       | Button 1 — BtnB (O / right face) |
+| Fire         | Button 7 — BtnTR (right shoulder) |
 | Hyperspace   | Button 6 — BtnTL (left shoulder) |
 | Start        | Button 11 — BtnStart |
 

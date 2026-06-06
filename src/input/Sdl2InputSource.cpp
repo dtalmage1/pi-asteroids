@@ -2,14 +2,14 @@
 
 // SHANWAN Android Gamepad (verified with: jstest /dev/input/js0)
 // Axes:    0=LeftX  1=LeftY  6=Hat0X  7=Hat0Y
-// Buttons: 1=BtnB(O/fire)  6=BtnTL(L-shoulder/hyperspace)  11=BtnStart
+// Buttons: 1=BtnB(O/thrust)  6=BtnTL(L-shoulder/hyperspace)  7=BtnTR(R-shoulder/fire)  11=BtnStart
 namespace {
-    constexpr int   kAxisLeftX    = 0;      // left joystick horizontal
-    constexpr int   kAxisLeftY    = 1;      // left joystick vertical
-    constexpr Sint16 kDeadZone    = 8000;   // ignore drift below this magnitude
-    constexpr int   kButtonFire   = 1;      // BtnB — right face button (O)
-    constexpr int   kButtonHyper  = 6;      // BtnTL — left shoulder
-    constexpr int   kButtonStart  = 11;     // BtnStart
+    constexpr int    kAxisLeftX    = 0;      // left joystick horizontal
+    constexpr Sint16 kDeadZone     = 8000;   // ignore drift below this magnitude
+    constexpr int    kButtonThrust = 1;      // BtnB — right face button (O)
+    constexpr int    kButtonFire   = 7;      // BtnTR — right shoulder
+    constexpr int    kButtonHyper  = 6;      // BtnTL — left shoulder
+    constexpr int    kButtonStart  = 11;     // BtnStart
 } // namespace
 
 namespace ast {
@@ -46,14 +46,13 @@ InputState Sdl2InputSource::query() const {
 
     state.connected = true;
 
-    const auto axisX = SDL_JoystickGetAxis(joystick_.get(), kAxisLeftX);
-    const auto axisY = SDL_JoystickGetAxis(joystick_.get(), kAxisLeftY);
+    const auto axisX  = SDL_JoystickGetAxis(joystick_.get(), kAxisLeftX);
     state.rotateLeft  = axisX < -kDeadZone;
     state.rotateRight = axisX >  kDeadZone;
-    state.thrust      = axisY < -kDeadZone;  // push up = negative Y
-    state.fire        = SDL_JoystickGetButton(joystick_.get(), kButtonFire)  != 0;
-    state.hyperspace  = SDL_JoystickGetButton(joystick_.get(), kButtonHyper) != 0;
-    state.start       = SDL_JoystickGetButton(joystick_.get(), kButtonStart) != 0;
+    state.thrust      = SDL_JoystickGetButton(joystick_.get(), kButtonThrust) != 0;
+    state.fire        = SDL_JoystickGetButton(joystick_.get(), kButtonFire)   != 0;
+    state.hyperspace  = SDL_JoystickGetButton(joystick_.get(), kButtonHyper)  != 0;
+    state.start       = SDL_JoystickGetButton(joystick_.get(), kButtonStart)  != 0;
 
     return state;
 }
