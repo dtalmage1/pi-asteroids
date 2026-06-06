@@ -1,14 +1,15 @@
 #include "input/Sdl2InputSource.hpp"
 
-// PiHut SNES-style USB gamepad button indices.
-// Verify with: jstest /dev/input/js0
-// Hat 0 is the D-pad; axis values use SDL_HAT_* masks.
+// SHANWAN Android Gamepad (verified with: jstest /dev/input/js0)
+// Axes:    0=LeftX  1=LeftY  6=Hat0X  7=Hat0Y
+// Buttons: 1=BtnB(O/fire)  6=BtnTL(L-shoulder/hyperspace)  11=BtnStart
 namespace {
-    constexpr int kHatIndex    = 0;
-    constexpr int kButtonB     = 0; // bottom face — secondary thrust
-    constexpr int kButtonA     = 1; // right face  — fire
-    constexpr int kButtonX     = 3; // top face    — hyperspace
-    constexpr int kButtonStart = 7; // start
+    constexpr int   kAxisLeftX    = 0;      // left joystick horizontal
+    constexpr int   kAxisLeftY    = 1;      // left joystick vertical
+    constexpr Sint16 kDeadZone    = 8000;   // ignore drift below this magnitude
+    constexpr int   kButtonFire   = 1;      // BtnB — right face button (O)
+    constexpr int   kButtonHyper  = 6;      // BtnTL — left shoulder
+    constexpr int   kButtonStart  = 11;     // BtnStart
 } // namespace
 
 namespace ast {
@@ -45,15 +46,14 @@ InputState Sdl2InputSource::query() const {
 
     state.connected = true;
 
-    const auto hat = SDL_JoystickGetHat(joystick_.get(), kHatIndex);
-    state.rotateLeft  = (hat & SDL_HAT_LEFT)  != 0;
-    state.rotateRight = (hat & SDL_HAT_RIGHT) != 0;
-    // D-pad up OR face button B both trigger thrust (classic arcade feel)
-    state.thrust     = ((hat & SDL_HAT_UP) != 0)
-                    || (SDL_JoystickGetButton(joystick_.get(), kButtonB) != 0);
-    state.fire       = SDL_JoystickGetButton(joystick_.get(), kButtonA) != 0;
-    state.hyperspace = SDL_JoystickGetButton(joystick_.get(), kButtonX) != 0;
-    state.start      = SDL_JoystickGetButton(joystick_.get(), kButtonStart) != 0;
+    const auto axisX = SDL_JoystickGetAxis(joystick_.get(), kAxisLeftX);
+    const auto axisY = SDL_JoystickGetAxis(joystick_.get(), kAxisLeftY);
+    state.rotateLeft  = axisX < -kDeadZone;
+    state.rotateRight = axisX >  kDeadZone;
+    state.thrust      = axisY < -kDeadZone;  // push up = negative Y
+    state.fire        = SDL_JoystickGetButton(joystick_.get(), kButtonFire)  != 0;
+    state.hyperspace  = SDL_JoystickGetButton(joystick_.get(), kButtonHyper) != 0;
+    state.start       = SDL_JoystickGetButton(joystick_.get(), kButtonStart) != 0;
 
     return state;
 }

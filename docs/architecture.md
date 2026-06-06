@@ -107,17 +107,17 @@ public:
 };
 ```
 
-`Sdl2InputSource` reads from `SDL_GameController` or raw joystick. Button mapping is
-**hardcoded** to the PiHut SNES layout (OQ-2 resolved: no config file in v1.0):
+`Sdl2InputSource` reads raw SDL joystick axes and buttons. Mapping is **hardcoded** to the
+SHANWAN Android Gamepad (OQ-2 resolved: no config file in v1.0):
 
-| Action | Button |
-|--------|--------|
-| Rotate left | D-pad left |
-| Rotate right | D-pad right |
-| Thrust | D-pad up or B (bottom face) |
-| Fire | A (right face) |
-| Hyperspace | X (top face) |
-| Start | Start button |
+| Action | Input |
+|--------|-------|
+| Rotate left  | Left joystick axis 0 < -8000 |
+| Rotate right | Left joystick axis 0 > +8000 |
+| Thrust       | Left joystick axis 1 < -8000 (up = negative Y) |
+| Fire         | Button 1 — BtnB (O / right face) |
+| Hyperspace   | Button 6 — BtnTL (left shoulder) |
+| Start        | Button 11 — BtnStart |
 
 ### `IRenderer`
 

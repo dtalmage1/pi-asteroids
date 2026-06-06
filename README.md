@@ -5,14 +5,14 @@ PiHut wireless USB gamepad. Written in C++17 using SDL2 for rendering, input, an
 
 ## Controls
 
-| Action      | Button            |
-|-------------|-------------------|
-| Rotate left | D-pad left        |
-| Rotate right| D-pad right       |
-| Thrust      | D-pad up or B     |
-| Fire        | A (right face)    |
-| Hyperspace  | X (top face)      |
-| Start       | Start button      |
+| Action      | Button                        |
+|-------------|-------------------------------|
+| Rotate left | Left joystick — left          |
+| Rotate right| Left joystick — right         |
+| Thrust      | Left joystick — up            |
+| Fire        | O button (right face)         |
+| Hyperspace  | Left shoulder button          |
+| Start       | Start button                  |
 
 ## Build prerequisites
 
