@@ -2,13 +2,13 @@
 
 // SHANWAN Android Gamepad (verified with: jstest /dev/input/js0)
 // Axes:    0=LeftX  1=LeftY  6=Hat0X  7=Hat0Y
-// Buttons: 1=BtnB(O/thrust)  6=BtnTL(L-shoulder/hyperspace)  7=BtnTR(R-shoulder/fire)  11=BtnStart
+// Buttons: 1=BtnB(O/thrust)  8=BtnTL2(L-lower-shoulder/hyperspace)  9=BtnTR2(R-lower-shoulder/fire)  11=BtnStart
 namespace {
     constexpr int    kAxisLeftX    = 0;      // left joystick horizontal
     constexpr Sint16 kDeadZone     = 8000;   // ignore drift below this magnitude
     constexpr int    kButtonThrust = 1;      // BtnB — right face button (O)
-    constexpr int    kButtonFire   = 7;      // BtnTR — right shoulder
-    constexpr int    kButtonHyper  = 6;      // BtnTL — left shoulder
+    constexpr int    kButtonFire   = 9;      // BtnTR2 — right lower shoulder
+    constexpr int    kButtonHyper  = 8;      // BtnTL2 — left lower shoulder
     constexpr int    kButtonStart  = 11;     // BtnStart
 } // namespace
 
