@@ -127,7 +127,7 @@ public:
     virtual ~IRenderer() = default;
     virtual void clear(Colour background) = 0;
     virtual void drawLine(Vec2 a, Vec2 b, Colour c) = 0;
-    virtual void drawLineStrip(std::span<const Vec2> points, Colour c, bool closed) = 0;
+    virtual void drawLineStrip(const std::vector<Vec2>& points, Colour c, bool closed) = 0;
     virtual void present() = 0;
     virtual Vec2 screenSize() const = 0;
 };
@@ -144,14 +144,16 @@ minimal and matches the vector aesthetic.
 
 ```cpp
 enum class SoundId {
-    Thrust,           // looping
+    Thrust,              // looping
     Fire,
     ExplosionSmall,
-    ExplosionLarge,   // ship or large/medium asteroid
-    SaucerEngine,     // looping
+    ExplosionLarge,      // ship destruction
+    SaucerEngine,        // looping — large saucer
     SaucerFire,
     BeatLow,
     BeatHigh,
+    ExplosionMedium,     // medium or large asteroid destruction
+    SaucerEngineSmall,   // looping — small saucer
 };
 
 class IAudioSink {
@@ -165,8 +167,9 @@ public:
 ```
 
 Audio is confirmed in v1.0 (OQ-6 resolved). `Sdl2AudioSink` wraps SDL2_mixer channels.
-If SDL2_mixer initialisation fails, a `NullAudioSink` (no-op implementation) is substituted
-silently — the game never knows audio is absent.
+`Sdl2AudioSink` tracks initialisation success via a private `initialised_` bool; if
+`Mix_OpenAudio` fails, all subsequent `play`/`loop`/`stop`/`isPlaying` calls are no-ops.
+`NullAudioSink` is available for unit tests; it is not used at runtime.
 
 ---
 
@@ -397,10 +400,10 @@ SDL_JOYDEVICEREMOVED event
        └─ set connected_ = false
 
 During disconnected frames:
-  └─ query() returns InputState{} with connected = false
-       └─ Game::update() sees connected == false
-            └─ if Playing: ignores all action inputs (ship coasts)
-               if Attract: waits silently for reconnect
+  └─ query() returns InputState{} with all fields false (including connected)
+       └─ Game::update() receives all-false inputs
+            └─ if Playing: no thrust/rotation/fire applied; ship coasts under drag
+               if Attract: start is false, so no transition occurs
 ```
 
 No crash, no undefined behaviour. The saucer and asteroids continue moving during
@@ -417,9 +420,9 @@ disconnect (game world is not frozen) — the player simply cannot input.
 feature selection.
 
 Both saucers: enter from a randomly chosen left or right screen edge at a random Y
-position, travel horizontally (with optional vertical weave for small saucer — TBD at
-feature selection), exit the opposite edge. A new spawn timer starts when the previous
-saucer exits or is destroyed.
+position, travel horizontally at constant speed, exit the opposite edge. Vertical weave
+for the small saucer was considered but not implemented in v1.0 (straight traversal only).
+A new spawn timer starts when the previous saucer exits or is destroyed.
 
 ---
 
@@ -480,7 +483,7 @@ Ubuntu runner runs unit tests without SDL2 installed.
 | `Sdl2Renderer` | `main()` stack | RAII |
 | `Sdl2InputSource` | `main()` stack | RAII |
 | `Sdl2AudioSink` | `main()` stack | RAII |
-| `Game` | `main()` stack | Receives `IRenderer&`, `IInputSource&`, `IAudioSink&` — non-owning |
+| `Game` | `main()` stack | Constructor takes `IAudioSink&` and `Vec2 screenSize`; `IRenderer&` passed per-frame to `render()`; `IInputSource` consumed in `main`, not by `Game` |
 | Entity vectors | `Game` | `std::vector<T>` value semantics |
 | Asteroid shapes | `Asteroid` | `std::vector<Vec2>` member |
 
@@ -497,7 +500,7 @@ Ubuntu runner runs unit tests without SDL2 installed.
 | OQ-3 | Coordinate origin | Top-left throughout; no conversion layer |
 | OQ-4 | HUD font | Line-drawn 7-segment-style digits via `IRenderer::drawLine`; no SDL2_ttf |
 | OQ-5 | Update/render coupling | Fixed 60 Hz lock-step; dt capped at 50 ms |
-| OQ-6 | Audio | SDL2_mixer in v1.0; `NullAudioSink` fallback on init failure |
+| OQ-6 | Audio | SDL2_mixer in v1.0; `Sdl2AudioSink::initialised_` flag makes init failure a silent no-op |
 | OQ-7 | State machine | Embedded in `Game`; no freestanding class |
 
 ---

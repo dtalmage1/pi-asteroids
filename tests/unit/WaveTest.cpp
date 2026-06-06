@@ -2,13 +2,9 @@
 #include "game/Game.hpp"
 #include "game/Wave.hpp"
 #include "MockAudioSink.hpp"
+#include "TestHelpers.hpp"
 
 namespace {
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
 
 int countActive(const std::vector<ast::Asteroid>& rocks) {
     int n = 0;
@@ -51,7 +47,7 @@ TEST(GameWave, WaveNumberZeroBeforeGameStart) {
 TEST(GameWave, NoAsteroidsImmediatelyAfterStart) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     EXPECT_EQ(countActive(game.asteroids()), 0);
 }
 
@@ -59,7 +55,7 @@ TEST(GameWave, NoAsteroidsImmediatelyAfterStart) {
 TEST(GameWave, WaveTimerDelaysFirstSpawn) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     const ast::InputState noInput;
     for (int i = 0; i < 60; ++i) { game.update(1.0F / 60.0F, noInput); }
     EXPECT_EQ(countActive(game.asteroids()), 0);
@@ -69,7 +65,7 @@ TEST(GameWave, WaveTimerDelaysFirstSpawn) {
 TEST(GameWave, WaveOneSpawnsFourLargeAsteroids) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     const ast::InputState noInput;
     for (int i = 0; i < 130; ++i) { game.update(1.0F / 60.0F, noInput); }
@@ -85,7 +81,7 @@ TEST(GameWave, WaveOneSpawnsFourLargeAsteroids) {
 TEST(GameWave, AsteroidsSpawnClearOfShip) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     const ast::InputState noInput;
     for (int i = 0; i < 130; ++i) { game.update(1.0F / 60.0F, noInput); }

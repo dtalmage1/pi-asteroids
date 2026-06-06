@@ -2,19 +2,9 @@
 #include "game/Game.hpp"
 #include "game/entities/Asteroid.hpp"
 #include "MockAudioSink.hpp"
+#include "TestHelpers.hpp"
 
 namespace {
-
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
-
-void tickFrames(ast::Game& game, int n) {
-    const ast::InputState noInput;
-    for (int i = 0; i < n; ++i) { game.update(1.0F / 60.0F, noInput); }
-}
 
 void doHyperspace(ast::Game& game) {
     ast::InputState input;
@@ -29,7 +19,7 @@ void doHyperspace(ast::Game& game) {
 TEST(Hyperspace, WarpChangesShipPosition) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     const ast::Vec2 before = game.ship().position;
     doHyperspace(game);
@@ -42,7 +32,7 @@ TEST(Hyperspace, WarpChangesShipPosition) {
 TEST(Hyperspace, ShipSurvivesFirstWarp) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     doHyperspace(game);
 
     EXPECT_EQ(game.state(), ast::GameState::Playing);
@@ -53,7 +43,7 @@ TEST(Hyperspace, ShipSurvivesFirstWarp) {
 TEST(Hyperspace, ShipSurvivesFourConsecutiveWarps) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     for (int i = 0; i < 4; ++i) { doHyperspace(game); }
 
@@ -65,7 +55,7 @@ TEST(Hyperspace, ShipSurvivesFourConsecutiveWarps) {
 TEST(Hyperspace, FifthWarpKillsShip) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     for (int i = 0; i < 5; ++i) { doHyperspace(game); }
 
@@ -77,7 +67,7 @@ TEST(Hyperspace, FifthWarpKillsShip) {
 TEST(Hyperspace, FifthWarpDecrementsLives) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     const int livesBefore = game.lives();
 
     for (int i = 0; i < 5; ++i) { doHyperspace(game); }
@@ -89,7 +79,7 @@ TEST(Hyperspace, FifthWarpDecrementsLives) {
 TEST(Hyperspace, WarpPositionWithinScreen) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     doHyperspace(game);
 
     EXPECT_GE(game.ship().position.x, 0.0F);
@@ -111,7 +101,7 @@ TEST(Hyperspace, IgnoredInAttractState) {
 TEST(Hyperspace, IgnoredWhenShipInactive) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     // Kill the ship via collision
     ast::Asteroid rock;
@@ -122,7 +112,7 @@ TEST(Hyperspace, IgnoredWhenShipInactive) {
     rock.shape      = ast::generateAsteroidShape(ast::AsteroidSize::Large, 10, 999U);
     rock.active     = true;
     game.spawnAsteroid(rock);
-    tickFrames(game, 1);  // triggers collision → PlayerDead
+    ast::test::tickFrames(game, 1);  // triggers collision → PlayerDead
 
     ASSERT_EQ(game.state(), ast::GameState::PlayerDead);
     const ast::Vec2 posBefore = game.ship().position;

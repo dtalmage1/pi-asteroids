@@ -124,8 +124,8 @@ Entries are promoted to **[FINAL]** when the feature is selected for development
 - One life is lost when the ship collides with an asteroid or a saucer projectile.
 - Remaining lives are displayed on the HUD (as small ship icons or a count).
 - When all lives are exhausted, the game transitions to Game Over.
-- One extra life is awarded at 10,000 points (classic arcade threshold); no further
-  bonus lives beyond that.
+- An extra life is awarded at every 10,000 points (10k, 20k, 30k, …); classic arcade
+  behaviour.
 
 *Parameters to finalise at feature selection: maximum lives cap (to prevent exploit if
 extra life is repeatable), HUD display style.*
@@ -140,10 +140,10 @@ extra life is repeatable), HUD display style.*
 - On respawn the ship has zero velocity and a fixed initial orientation.
 - A brief invincibility period follows respawn during which ship–asteroid collisions are
   ignored; the ship flashes visually to indicate this.
-- Respawn is delayed if the centre of the screen is occupied by an asteroid (wait until
-  clear, or respawn anyway — to decide at feature selection).
+- Respawn always occurs at the centre after the delay timer expires, regardless of
+  asteroid positions. The invincibility period compensates for any overlap on arrival.
 
-*Parameters to finalise: invincibility duration, respawn delay.*
+*Parameters (finalised at GAME-3): invincibility duration = 3 s, respawn delay = 3 s.*
 
 ---
 
@@ -198,7 +198,7 @@ spawn exclusion radius, inter-wave delay.*
 **[OUTLINE]**
 
 - The top 5 scores of the current session are recorded.
-- Scores are displayed on the Game Over or Attract screen.
+- Scores are displayed on the **Attract** screen and on the **Game Over** screen.
 - Scores are **not** persisted to disk — the table resets on process restart (v1.0 scope).
 - No name entry (initials) in v1.0 — scores only.
 
@@ -281,9 +281,10 @@ small-saucer aim accuracy, saucer speed, wave at which small saucer begins appea
 **[OUTLINE]**
 
 - Full audio in scope for v1.0, implemented via SDL2_mixer behind `IAudioSink`.
-- Sound effects: thrust (looping), fire, small explosion (small asteroid), large
-  explosion (medium/large asteroid or ship), saucer engine (looping while present),
-  saucer fire.
+- Sound effects: thrust (looping), fire, small explosion (small asteroid), medium
+  explosion (medium/large asteroid), large explosion (ship destruction), saucer engine
+  large (looping while large saucer present), saucer engine small (looping while small
+  saucer present), saucer fire.
 - Background beat: two alternating low tones, tempo increasing as the asteroid count
   decreases (classic tension mechanic).
 - The game is functional (silent) if SDL2_mixer initialisation fails; audio failure is
@@ -317,7 +318,7 @@ All scope questions resolved during M1 review.
 | SQ-4 | Attract mode: static title or auto-play demo? | **Static title screen** |
 | SQ-5 | High-score name entry (initials) in v1.0? | **No** (scores only) |
 | SQ-6 | Starting lives? | **3** |
-| SQ-7 | Extra life threshold? | **10,000 points, once** |
+| SQ-7 | Extra life threshold? | **Every 10,000 points** (10k, 20k, 30k, …) |
 | SQ-8 | Saucer spawn trigger? | **Periodic timer (classic)** |
 
 ---

@@ -2,19 +2,9 @@
 #include "game/Game.hpp"
 #include "game/ScoreTable.hpp"
 #include "MockAudioSink.hpp"
+#include "TestHelpers.hpp"
 
 namespace {
-
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
-
-void tickFrames(ast::Game& game, int n) {
-    const ast::InputState noInput;
-    for (int i = 0; i < n; ++i) { game.update(1.0F / 60.0F, noInput); }
-}
 
 void killShip(ast::Game& game) {
     ast::Asteroid rock;
@@ -31,9 +21,9 @@ void killShip(ast::Game& game) {
 
 // Exhaust all 3 lives and wait until the game-over timer puts us in GameOver.
 void reachGameOver(ast::Game& game) {
-    startGame(game);
+    ast::test::startGame(game);
     killShip(game);
-    tickFrames(game, 1000);
+    ast::test::tickFrames(game, 1000);
 }
 
 } // namespace
@@ -103,7 +93,7 @@ TEST(ScoreTable, GameSubmitsScoreOnTimerExpiry) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
     reachGameOver(game);                    // → GameOver
-    tickFrames(game, 310);                  // > 5 s → Attract, score submitted
+    ast::test::tickFrames(game, 310);                  // > 5 s → Attract, score submitted
     ASSERT_EQ(game.scoreTable().count(), 1U);
 }
 
@@ -124,7 +114,7 @@ TEST(ScoreTable, MultipleGamesAccumulateScores) {
     ast::Game game(audio, {800.0F, 600.0F});
     for (std::size_t i = 0U; i < ast::kScoreTableSize; ++i) {
         reachGameOver(game);
-        tickFrames(game, 310);  // → Attract
+        ast::test::tickFrames(game, 310);  // → Attract
     }
     EXPECT_EQ(game.scoreTable().count(), ast::kScoreTableSize);
 }

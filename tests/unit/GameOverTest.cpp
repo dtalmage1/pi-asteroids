@@ -3,19 +3,9 @@
 #include "game/Glyph.hpp"
 #include "MockAudioSink.hpp"
 #include "MockRenderer.hpp"
+#include "TestHelpers.hpp"
 
 namespace {
-
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
-
-void tickFrames(ast::Game& game, int n) {
-    const ast::InputState noInput;
-    for (int i = 0; i < n; ++i) { game.update(1.0F / 60.0F, noInput); }
-}
 
 void killShip(ast::Game& game) {
     ast::Asteroid rock;
@@ -32,9 +22,9 @@ void killShip(ast::Game& game) {
 
 // Reach GameOver by placing a stationary kill-rock that auto-triggers three deaths.
 void reachGameOver(ast::Game& game) {
-    startGame(game);
+    ast::test::startGame(game);
     killShip(game);
-    tickFrames(game, 1000);
+    ast::test::tickFrames(game, 1000);
 }
 
 } // namespace
@@ -43,7 +33,7 @@ void reachGameOver(ast::Game& game) {
 TEST(GameOver, IsNotGameOverWithLivesRemaining) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     killShip(game);
     EXPECT_NE(game.state(), ast::GameState::GameOver);
 }
@@ -53,7 +43,7 @@ TEST(GameOver, DoesNotTransitionBeforeDelay) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
     reachGameOver(game);
-    tickFrames(game, 60);  // 1 more second — well within the remaining delay window
+    ast::test::tickFrames(game, 60);  // 1 more second — well within the remaining delay window
     EXPECT_EQ(game.state(), ast::GameState::GameOver);
 }
 
@@ -62,7 +52,7 @@ TEST(GameOver, TransitionsToAttractOnTimer) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
     reachGameOver(game);
-    tickFrames(game, 310);  // > 5 seconds — delay expired
+    ast::test::tickFrames(game, 310);  // > 5 seconds — delay expired
     EXPECT_EQ(game.state(), ast::GameState::Attract);
 }
 
@@ -83,7 +73,7 @@ TEST(GameOver, ScorePreservedDuringGameOver) {
     ast::Game game(audio, {800.0F, 600.0F});
     reachGameOver(game);
     const int scoreBefore = game.score();
-    tickFrames(game, 60);
+    ast::test::tickFrames(game, 60);
     EXPECT_EQ(game.score(), scoreBefore);
 }
 
@@ -92,8 +82,8 @@ TEST(GameOver, ScoreResetOnNewGame) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
     reachGameOver(game);
-    tickFrames(game, 310);  // → Attract
-    startGame(game);         // → Playing
+    ast::test::tickFrames(game, 310);  // → Attract
+    ast::test::startGame(game);         // → Playing
     EXPECT_EQ(game.score(), 0);
 }
 
@@ -102,8 +92,8 @@ TEST(GameOver, LivesResetOnNewGame) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
     reachGameOver(game);
-    tickFrames(game, 310);  // → Attract
-    startGame(game);
+    ast::test::tickFrames(game, 310);  // → Attract
+    ast::test::startGame(game);
     EXPECT_EQ(game.lives(), 3);
 }
 

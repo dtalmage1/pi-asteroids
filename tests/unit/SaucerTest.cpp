@@ -3,22 +3,12 @@
 #include "game/Game.hpp"
 #include "MockAudioSink.hpp"
 #include "MockRenderer.hpp"
+#include "TestHelpers.hpp"
 
 namespace {
 
 constexpr int kSpawnFrames   = 920;  // > 15 s at 60 Hz (15*60=900)
 constexpr int kCrossFrames   = 640;  // > 812 px / 80 px·s⁻¹ * 60 ≈ 609 frames
-
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
-
-void tickFrames(ast::Game& game, int n) {
-    const ast::InputState noInput;
-    for (int i = 0; i < n; ++i) { game.update(1.0F / 60.0F, noInput); }
-}
 
 } // namespace
 
@@ -26,7 +16,7 @@ void tickFrames(ast::Game& game, int n) {
 TEST(Saucer, NoSaucerOnGameStart) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     EXPECT_FALSE(game.saucer().active);
 }
 
@@ -34,8 +24,8 @@ TEST(Saucer, NoSaucerOnGameStart) {
 TEST(Saucer, SpawnsAfterDelay) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, kSpawnFrames);
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, kSpawnFrames);
     EXPECT_TRUE(game.saucer().active);
 }
 
@@ -43,11 +33,11 @@ TEST(Saucer, SpawnsAfterDelay) {
 TEST(Saucer, MovesEachFrame) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, kSpawnFrames);
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, kSpawnFrames);
 
     const ast::Vec2 posBefore = game.saucer().position;
-    tickFrames(game, 1);
+    ast::test::tickFrames(game, 1);
     const ast::Vec2 posAfter  = game.saucer().position;
 
     EXPECT_TRUE((posAfter.x != posBefore.x) || (posAfter.y != posBefore.y));
@@ -57,10 +47,10 @@ TEST(Saucer, MovesEachFrame) {
 TEST(Saucer, ExitsScreen) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, kSpawnFrames);          // saucer now active
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, kSpawnFrames);          // saucer now active
     ASSERT_TRUE(game.saucer().active);
-    tickFrames(game, kCrossFrames);          // saucer has crossed the 800 px screen
+    ast::test::tickFrames(game, kCrossFrames);          // saucer has crossed the 800 px screen
     EXPECT_FALSE(game.saucer().active);
 }
 
@@ -68,8 +58,8 @@ TEST(Saucer, ExitsScreen) {
 TEST(Saucer, SpawnPositionWithinScreen) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, kSpawnFrames);
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, kSpawnFrames);
 
     EXPECT_GE(game.saucer().position.y, 0.0F);
     EXPECT_LE(game.saucer().position.y, 600.0F);
@@ -79,8 +69,8 @@ TEST(Saucer, SpawnPositionWithinScreen) {
 TEST(Saucer, SpawnsAgainAfterExit) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, kSpawnFrames + kCrossFrames);  // first saucer spawned and gone
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, kSpawnFrames + kCrossFrames);  // first saucer spawned and gone
     ASSERT_FALSE(game.saucer().active);
 
     // Tick up to 3×kSpawnFrames more frames.  If the ship exhausts all lives and
@@ -91,7 +81,7 @@ TEST(Saucer, SpawnsAgainAfterExit) {
     bool spawned = false;
     for (int i = 0; i < (3 * kSpawnFrames) && !spawned; ++i) {
         if (game.state() == ast::GameState::Attract) {
-            startGame(game);
+            ast::test::startGame(game);
         }
         game.update(1.0F / 60.0F, noInput);
         spawned = game.saucer().active;
@@ -103,8 +93,8 @@ TEST(Saucer, SpawnsAgainAfterExit) {
 TEST(Saucer, RenderedWhenActive) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, kSpawnFrames);
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, kSpawnFrames);
     ASSERT_TRUE(game.saucer().active);
 
     ast::MockRenderer renderer;
@@ -118,7 +108,7 @@ TEST(Saucer, RenderedWhenActive) {
 TEST(Saucer, NotRenderedWhenInactive) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     ASSERT_FALSE(game.saucer().active);
 
     ast::MockRenderer renderer;
@@ -137,6 +127,6 @@ TEST(Saucer, NoSpawnInAttract) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
     // Do NOT call startGame — stay in Attract for many frames
-    tickFrames(game, kSpawnFrames);
+    ast::test::tickFrames(game, kSpawnFrames);
     EXPECT_FALSE(game.saucer().active);
 }

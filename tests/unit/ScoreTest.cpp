@@ -1,14 +1,7 @@
 #include <gtest/gtest.h>
 #include "game/Game.hpp"
 #include "MockAudioSink.hpp"
-
-namespace {
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
-} // namespace
+#include "TestHelpers.hpp"
 
 // Score is zero immediately after construction.
 TEST(Score, StartsAtZero) {
@@ -21,7 +14,7 @@ TEST(Score, StartsAtZero) {
 TEST(Score, LargeAsteroidAwards20Points) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::Asteroid rock;
     rock.position = {400.0F, 150.0F};
@@ -43,7 +36,7 @@ TEST(Score, LargeAsteroidAwards20Points) {
 TEST(Score, MediumAsteroidAwards50Points) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::Asteroid rock;
     rock.position = {400.0F, 150.0F};
@@ -65,7 +58,7 @@ TEST(Score, MediumAsteroidAwards50Points) {
 TEST(Score, SmallAsteroidAwards100Points) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::Asteroid rock;
     rock.position = {400.0F, 150.0F};
@@ -87,7 +80,7 @@ TEST(Score, SmallAsteroidAwards100Points) {
 TEST(Score, ScoreAccumulates) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     // Two Small asteroids stacked in the upward shot path — one shot each
     ast::Asteroid rock1;

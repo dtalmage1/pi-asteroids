@@ -2,14 +2,7 @@
 #include "game/Game.hpp"
 #include "MockAudioSink.hpp"
 #include "MockRenderer.hpp"
-
-namespace {
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
-} // namespace
+#include "TestHelpers.hpp"
 
 // Game starts in Attract state immediately after construction.
 TEST(Game, StartsInAttract) {
@@ -118,7 +111,7 @@ TEST(Game, ThrustFlagTracksInput) {
 TEST(Game, ShipCollidesWithAsteroidDeactivatesShip) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game); // ship at (400, 300), Playing
+    ast::test::startGame(game); // ship at (400, 300), Playing
 
     ast::Asteroid rock;
     rock.position = {400.0F, 300.0F}; // on top of ship — guaranteed overlap
@@ -137,7 +130,7 @@ TEST(Game, ShipCollidesWithAsteroidDeactivatesShip) {
 TEST(Game, ShipCollisionTransitionsToPlayerDead) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::Asteroid rock;
     rock.position = {400.0F, 300.0F};
@@ -156,7 +149,7 @@ TEST(Game, ShipCollisionTransitionsToPlayerDead) {
 TEST(Game, AsteroidSurvivesShipCollision) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::Asteroid rock;
     rock.position = {400.0F, 300.0F};

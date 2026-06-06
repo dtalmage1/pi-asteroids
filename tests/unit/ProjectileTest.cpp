@@ -4,14 +4,7 @@
 #include "game/Game.hpp"
 #include "MockAudioSink.hpp"
 #include "MockRenderer.hpp"
-
-namespace {
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
-} // namespace
+#include "TestHelpers.hpp"
 
 TEST(Projectile, DefaultsToInactive) {
     const ast::Projectile p;
@@ -27,7 +20,7 @@ TEST(Projectile, DefaultOwnerIsPlayer) {
 TEST(Game, FireSpawnsActiveProjectile) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::InputState input;
     input.fire = true;
@@ -44,7 +37,7 @@ TEST(Game, FireSpawnsActiveProjectile) {
 TEST(Game, FireCapAtFourProjectiles) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::InputState input;
     input.fire = true;
@@ -63,7 +56,7 @@ TEST(Game, FireCapAtFourProjectiles) {
 TEST(Game, ProjectileMovesEachFrame) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game); // ship angle=0, nose points up (-Y)
+    ast::test::startGame(game); // ship angle=0, nose points up (-Y)
 
     ast::InputState fireInput;
     fireInput.fire = true;
@@ -88,7 +81,7 @@ TEST(Game, ProjectileMovesEachFrame) {
 TEST(Game, ProjectileExpiresAfterLifetime) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::InputState fireInput;
     fireInput.fire = true;
@@ -126,7 +119,7 @@ TEST(Game, FireIgnoredInAttractState) {
 TEST(Game, FireSlotReusedAfterExpiry) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     // Fill all 4 slots
     ast::InputState fireInput;
@@ -158,7 +151,7 @@ TEST(Game, RenderDrawsActiveProjectile) {
     ast::MockAudioSink audio;
     ast::MockRenderer  renderer;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::InputState fireInput;
     fireInput.fire = true;
@@ -188,7 +181,7 @@ TEST(Game, RenderSkipsInactiveProjectiles) {
 TEST(Game, LargeAsteroidSplitsIntoTwoMedium) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::Asteroid rock;
     rock.position = {400.0F, 150.0F};
@@ -214,7 +207,7 @@ TEST(Game, LargeAsteroidSplitsIntoTwoMedium) {
 TEST(Game, MediumAsteroidSplitsIntoTwoSmall) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::Asteroid rock;
     rock.position = {400.0F, 150.0F};
@@ -240,7 +233,7 @@ TEST(Game, MediumAsteroidSplitsIntoTwoSmall) {
 TEST(Game, SmallAsteroidDoesNotSplit) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::Asteroid rock;
     rock.position = {400.0F, 150.0F};
@@ -266,7 +259,7 @@ TEST(Game, SmallAsteroidDoesNotSplit) {
 TEST(Game, SplitChildrenDiverge) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     ast::Asteroid rock;
     rock.position = {400.0F, 150.0F};
@@ -296,7 +289,7 @@ TEST(Game, SplitChildrenDiverge) {
 TEST(Game, ProjectileDestroysAsteroidOnHit) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game); // ship at (400, 300), angle=0 → nose pointing up (-Y)
+    ast::test::startGame(game); // ship at (400, 300), angle=0 → nose pointing up (-Y)
 
     ast::Asteroid rock;
     rock.position  = {400.0F, 150.0F}; // directly above ship, in shot path
@@ -326,7 +319,7 @@ TEST(Game, ProjectileDestroysAsteroidOnHit) {
 TEST(Game, ProjectileDoesNotDestroyDistantAsteroid) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game); // ship at (400, 300), firing upward
+    ast::test::startGame(game); // ship at (400, 300), firing upward
 
     ast::Asteroid rock;
     rock.position  = {0.0F, 0.0F}; // far corner — not in shot path

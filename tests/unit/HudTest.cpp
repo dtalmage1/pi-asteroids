@@ -4,14 +4,9 @@
 #include "game/entities/Asteroid.hpp"
 #include "MockAudioSink.hpp"
 #include "MockRenderer.hpp"
+#include "TestHelpers.hpp"
 
 namespace {
-
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
 
 void killShip(ast::Game& game) {
     ast::Asteroid rock;
@@ -32,7 +27,7 @@ void killShip(ast::Game& game) {
 TEST(Hud, ScoreRenderedWhilePlaying) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     ast::MockRenderer renderer;
     EXPECT_CALL(renderer, drawLine(testing::_, testing::_, testing::_))
         .Times(testing::AtLeast(1));
@@ -53,7 +48,7 @@ TEST(Hud, ScoreNotRenderedInAttract) {
 TEST(Hud, LivesIconsRenderedWhilePlaying) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     ast::MockRenderer renderer;
     EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, testing::_))
         .Times(4);
@@ -74,7 +69,7 @@ TEST(Hud, LivesIconsNotRenderedInAttract) {
 TEST(Hud, LivesIconCountMatchesLives) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     killShip(game);
     ast::MockRenderer renderer;
     EXPECT_CALL(renderer, drawLineStrip(testing::_, testing::_, testing::_))

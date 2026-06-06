@@ -4,16 +4,7 @@
 #include "game/Glyph.hpp"
 #include "MockAudioSink.hpp"
 #include "MockRenderer.hpp"
-
-namespace {
-
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
-
-} // namespace
+#include "TestHelpers.hpp"
 
 // "ASTEROIDS" title and "PRESS START" prompt produce many drawLine calls in Attract.
 TEST(Attract, TextRenderedInAttract) {
@@ -29,7 +20,7 @@ TEST(Attract, TextRenderedInAttract) {
 TEST(Attract, TextNotRenderedWhilePlaying) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     ast::MockRenderer renderer;
     // Score HUD "0" = 4 strokes; attract title would add 30+
     EXPECT_CALL(renderer, drawLine(testing::_, testing::_, testing::_))

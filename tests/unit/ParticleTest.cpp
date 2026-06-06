@@ -6,14 +6,9 @@
 #include "game/entities/Particle.hpp"
 #include "MockAudioSink.hpp"
 #include "MockRenderer.hpp"
+#include "TestHelpers.hpp"
 
 namespace {
-
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
 
 void killShip(ast::Game& game) {
     ast::Asteroid rock;
@@ -34,7 +29,7 @@ void killShip(ast::Game& game) {
 TEST(Particle, SpawnOnAsteroidDestroy) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     // Place a Small asteroid just ahead of the ship's nose so one fire frame hits it.
     ast::Asteroid rock;
@@ -59,7 +54,7 @@ TEST(Particle, SpawnOnAsteroidDestroy) {
 TEST(Particle, SpawnOnShipDestroy) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     killShip(game);
 
     const auto& parts = game.particles();
@@ -71,7 +66,7 @@ TEST(Particle, SpawnOnShipDestroy) {
 TEST(Particle, ParticlesExpireOverTime) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     killShip(game);
 
     // Tick for longer than kParticleLifetimeMax (1.0 s) — 70 frames ≈ 1.17 s
@@ -87,7 +82,7 @@ TEST(Particle, ParticlesExpireOverTime) {
 TEST(Particle, ParticlesRendered) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     killShip(game);
 
     ast::MockRenderer renderer;
@@ -101,7 +96,7 @@ TEST(Particle, ParticlesRendered) {
 TEST(Particle, ParticlesMoveOverTime) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
     killShip(game);  // particles spawn at ship centre; killShip already ticked once
 
     // After the kill-frame tick, all particles should have left the spawn point.
@@ -122,7 +117,7 @@ TEST(Particle, ParticlesMoveOverTime) {
 TEST(Particle, NoParticlesAtGameStart) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
+    ast::test::startGame(game);
 
     const auto& parts = game.particles();
     EXPECT_FALSE(std::any_of(parts.begin(), parts.end(),

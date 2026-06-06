@@ -692,15 +692,27 @@ void Game::render(IRenderer& renderer) const {
         const float charH     = screenSize_.y * 0.08F;
         const float goW       = stringWidth(charH, "GAME OVER");
         drawString(renderer,
-                   Vec2{((screenSize_.x - goW) * 0.5F), (screenSize_.y * 0.35F)},
+                   Vec2{((screenSize_.x - goW) * 0.5F), (screenSize_.y * 0.30F)},
                    charH, "GAME OVER", Colour{255, 255, 255, 255});
 
         const float scoreCharH = screenSize_.y * 0.05F;
         const std::string scoreStr = std::to_string(score_);
         const float scoreW = stringWidth(scoreCharH, scoreStr);
         drawString(renderer,
-                   Vec2{((screenSize_.x - scoreW) * 0.5F), (screenSize_.y * 0.52F)},
+                   Vec2{((screenSize_.x - scoreW) * 0.5F), (screenSize_.y * 0.44F)},
                    scoreCharH, scoreStr, Colour{255, 255, 255, 255});
+
+        const float tableCharH  = screenSize_.y * kAttractScoreCharHeightFrac;
+        const float tableLineH  = screenSize_.y * kAttractScoreLineHeightFrac;
+        for (std::size_t i = 0U; i < scoreTable_.count(); ++i) {
+            const std::string s = std::to_string(scoreTable_.entry(i));
+            const float       w = stringWidth(tableCharH, s);
+            const float       y = (screenSize_.y * 0.56F) +
+                                  (static_cast<float>(i) * tableLineH);
+            drawString(renderer,
+                       Vec2{((screenSize_.x - w) * 0.5F), y},
+                       tableCharH, s, Colour{255, 255, 255, 255});
+        }
     }
 }
 

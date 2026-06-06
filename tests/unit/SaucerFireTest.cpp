@@ -3,22 +3,12 @@
 #include "game/Game.hpp"
 #include "game/entities/Asteroid.hpp"
 #include "MockAudioSink.hpp"
+#include "TestHelpers.hpp"
 
 namespace {
 
 constexpr int kSpawnFrames = 920;  // > 15 s at 60 Hz — saucer is active after this
 constexpr int kFireFrames  =  96;  // > 1.5 s * 60 Hz — saucer has fired at least once
-
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start = true;
-    game.update(1.0F / 60.0F, input);
-}
-
-void tickFrames(ast::Game& game, int n) {
-    const ast::InputState noInput;
-    for (int i = 0; i < n; ++i) { game.update(1.0F / 60.0F, noInput); }
-}
 
 ast::Projectile playerProjectileAt(ast::Vec2 pos) {
     ast::Projectile p;
@@ -36,10 +26,10 @@ ast::Projectile playerProjectileAt(ast::Vec2 pos) {
 TEST(SaucerFire, FiresProjectileWhileActive) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, kSpawnFrames);
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, kSpawnFrames);
     ASSERT_TRUE(game.saucer().active);
-    tickFrames(game, kFireFrames);
+    ast::test::tickFrames(game, kFireFrames);
 
     bool found = false;
     for (const auto& p : game.projectiles()) {
@@ -52,12 +42,12 @@ TEST(SaucerFire, FiresProjectileWhileActive) {
 TEST(SaucerFire, PlayerProjectileDestroySaucer) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, kSpawnFrames);
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, kSpawnFrames);
     ASSERT_TRUE(game.saucer().active);
 
     game.spawnProjectile(playerProjectileAt(game.saucer().position));
-    tickFrames(game, 1);
+    ast::test::tickFrames(game, 1);
 
     EXPECT_FALSE(game.saucer().active);
 }
@@ -66,12 +56,12 @@ TEST(SaucerFire, PlayerProjectileDestroySaucer) {
 TEST(SaucerFire, DestroyAwards200Points) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, kSpawnFrames);
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, kSpawnFrames);
     ASSERT_TRUE(game.saucer().active);
 
     game.spawnProjectile(playerProjectileAt(game.saucer().position));
-    tickFrames(game, 1);
+    ast::test::tickFrames(game, 1);
 
     EXPECT_EQ(game.score(), 200);
 }
@@ -80,8 +70,8 @@ TEST(SaucerFire, DestroyAwards200Points) {
 TEST(SaucerFire, SaucerProjectileDoesNotHitAsteroid) {
     ast::MockAudioSink audio;
     ast::Game game(audio, {800.0F, 600.0F});
-    startGame(game);
-    tickFrames(game, 2);  // just get into Playing state
+    ast::test::startGame(game);
+    ast::test::tickFrames(game, 2);  // just get into Playing state
 
     constexpr ast::Vec2 kTarget{200.0F, 200.0F};
 
@@ -99,7 +89,7 @@ TEST(SaucerFire, SaucerProjectileDoesNotHitAsteroid) {
     p.active    = true;
     game.spawnProjectile(p);
 
-    tickFrames(game, 1);
+    ast::test::tickFrames(game, 1);
 
     bool asteroidSurvived = false;
     for (const auto& a : game.asteroids()) {

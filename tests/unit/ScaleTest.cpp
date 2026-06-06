@@ -2,17 +2,7 @@
 #include "game/Game.hpp"
 #include "game/entities/Asteroid.hpp"
 #include "MockAudioSink.hpp"
-
-namespace {
-
-void startGame(ast::Game& game) {
-    ast::InputState input;
-    input.start     = true;
-    input.connected = true;
-    game.update(1.0F / 60.0F, input);
-}
-
-} // namespace
+#include "TestHelpers.hpp"
 
 // Thrust acceleration is proportional to screen height / 600.
 TEST(Scale, ThrustAccelScalesWithScreenHeight) {
@@ -42,7 +32,7 @@ TEST(Scale, CollisionRadiusScalesWithScreenHeight) {
     // At 600 px: ship kRadius=10, asteroid small kRadius=12 → sum=22.
     // Place asteroid 25 px away → no collision (25 > 22).
     ast::Game game600(audio, {800.0F, 600.0F});
-    startGame(game600);
+    ast::test::startGame(game600);
     ast::Asteroid rock600;
     rock600.position = game600.ship().position + ast::Vec2{25.0F, 0.0F};
     rock600.velocity = {0.0F, 0.0F};
@@ -55,7 +45,7 @@ TEST(Scale, CollisionRadiusScalesWithScreenHeight) {
     // At 1200 px: effective ship=20, asteroid small=24 → sum=44.
     // Same 25 px offset → collision (25 < 44).
     ast::Game game1200(audio, {800.0F, 1200.0F});
-    startGame(game1200);
+    ast::test::startGame(game1200);
     ast::Asteroid rock1200;
     rock1200.position = game1200.ship().position + ast::Vec2{25.0F, 0.0F};
     rock1200.velocity = {0.0F, 0.0F};
