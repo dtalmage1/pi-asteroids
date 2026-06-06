@@ -24,7 +24,7 @@ TEST(SaucerAudio, EngineLoopsWhileActive) {
     testing::NiceMock<ast::MockAudioSink> audio;
     ast::Game game(audio, {800.0F, 600.0F});
     ast::test::startGame(game);
-    game.activateSaucer(ast::SaucerSize::Large, {400.0F, 300.0F});
+    game.activateSaucer(ast::SaucerSize::Large, {400.0F, 100.0F});  // clear of ship spawn at {400, 300}
 
     EXPECT_CALL(audio, loop(ast::SoundId::SaucerEngine)).Times(testing::AtLeast(1));
 
@@ -65,7 +65,7 @@ TEST(SaucerAudio, SmallSaucerLoopsSmallEngineSound) {
     testing::NiceMock<ast::MockAudioSink> audio;
     ast::Game game(audio, {800.0F, 600.0F});
     ast::test::startGame(game);
-    game.activateSaucer(ast::SaucerSize::Small, {400.0F, 300.0F});
+    game.activateSaucer(ast::SaucerSize::Small, {400.0F, 100.0F});  // clear of ship spawn at {400, 300}
 
     EXPECT_CALL(audio, loop(ast::SoundId::SaucerEngineSmall)).Times(testing::AtLeast(1));
 

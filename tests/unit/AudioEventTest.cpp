@@ -155,6 +155,8 @@ TEST(AudioEvent, ShipDeathStopsThrustAndPlaysExplosion) {
     ast::test::startGame(game);
 
     EXPECT_CALL(audio, stop(ast::SoundId::Thrust)).Times(testing::AtLeast(1));
+    EXPECT_CALL(audio, stop(ast::SoundId::SaucerEngine)).Times(testing::AnyNumber());
+    EXPECT_CALL(audio, stop(ast::SoundId::SaucerEngineSmall)).Times(testing::AnyNumber());
     EXPECT_CALL(audio, play(ast::SoundId::ExplosionLarge)).Times(1);
 
     ast::Asteroid rock;

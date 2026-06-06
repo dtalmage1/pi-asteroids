@@ -494,6 +494,12 @@ void Game::killShip() {
     respawnTimer_ = kRespawnDelay;
     state_        = GameState::PlayerDead;
     audio_.stop(SoundId::Thrust);
+    audio_.stop(SoundId::SaucerEngine);
+    audio_.stop(SoundId::SaucerEngineSmall);
+    if (saucer_.active) {
+        saucer_.active    = false;
+        saucerSpawnTimer_ = kSaucerSpawnInterval;
+    }
     audio_.play(SoundId::ExplosionLarge);
 }
 
