@@ -39,13 +39,13 @@ TEST(Game, FireCapAtFourProjectiles) {
     ast::Game game(audio, {800.0F, 600.0F});
     ast::test::startGame(game);
 
-    // Alternate press/release to trigger rising-edge; fire far more than kMaxProjectiles times
+    // Fire far more than kMaxProjectiles times, waiting past kFireCooldown between each
     const ast::InputState noInput;
     ast::InputState input;
     input.fire = true;
     for (int i = 0; i < 20; ++i) {
         game.update(1.0F / 60.0F, input);
-        game.update(1.0F / 60.0F, noInput);
+        for (int j = 0; j < 10; ++j) { game.update(1.0F / 60.0F, noInput); }
     }
 
     int activeCount = 0;
@@ -124,13 +124,13 @@ TEST(Game, FireSlotReusedAfterExpiry) {
     ast::Game game(audio, {800.0F, 600.0F});
     ast::test::startGame(game);
 
-    // Fill all 4 slots — alternate press/release for rising-edge detection
+    // Fill all 4 slots — wait past kFireCooldown (0.15s ≈ 9 frames) between shots
     const ast::InputState noInput;
     ast::InputState fireInput;
     fireInput.fire = true;
     for (int i = 0; i < 4; ++i) {
         game.update(1.0F / 60.0F, fireInput);
-        game.update(1.0F / 60.0F, noInput);
+        for (int j = 0; j < 10; ++j) { game.update(1.0F / 60.0F, noInput); }
     }
 
     // Wait for all to expire

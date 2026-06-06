@@ -52,6 +52,7 @@ constexpr float kSaucerFireInterval           =  1.5F;  // seconds between sauce
 constexpr float kSaucerProjectileSpeed        = 300.0F; // pixels/s
 constexpr int   kScoreSaucerLarge             = 200;
 constexpr int   kScoreSaucerSmall             = 1000;
+constexpr float kFireCooldown                 = 0.15F;       // seconds between shots (hold-to-fire rate)
 constexpr float kSmallSaucerSpreadMax         = 0.3926991F;  // π/8 (~22.5°)
 constexpr float kSmallSaucerSpreadStep        = 0.1963496F;  // π/16 per wave
 constexpr float kAttractTitleCharHeightFrac  = 0.10F;
@@ -254,7 +255,7 @@ void Game::update(float dt, const InputState& input) {
         respawnTimer_       = 0.0F;
         particles_          = {};
         nextExtraLifeScore_ = kExtraLifeScore;
-        prevFireInput_       = false;
+        fireCooldown_        = 0.0F;
         prevHyperspaceInput_ = false;
         frameCount_          = 0U;
     }
@@ -317,12 +318,12 @@ void Game::update(float dt, const InputState& input) {
     tickGameOver(dt);
 
     ++frameCount_;
-    prevFireInput_       = input.fire;
+    fireCooldown_        = std::max(0.0F, fireCooldown_ - dt);
     prevHyperspaceInput_ = input.hyperspace;
 }
 
 void Game::tryFire(const InputState& input) {
-    if (!input.fire || prevFireInput_) { return; }  // fire on rising edge only
+    if (!input.fire || fireCooldown_ > 0.0F) { return; }
     Projectile* slot = nullptr;
     for (auto& candidate : projectiles_) {
         if (!candidate.active) { slot = &candidate; break; }
@@ -334,6 +335,7 @@ void Game::tryFire(const InputState& input) {
         slot->lifetime = kProjectileLifetime;
         slot->owner    = ProjectileOwner::Player;
         slot->active   = true;
+        fireCooldown_  = kFireCooldown;
         audio_.play(SoundId::Fire);
     }
 }

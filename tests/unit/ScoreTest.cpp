@@ -97,14 +97,14 @@ TEST(Score, ScoreAccumulates) {
     rock2.active   = true;
     game.spawnAsteroid(rock2);
 
-    // Fire twice — release between shots for rising-edge detection
+    // Fire twice — wait past kFireCooldown (0.15s ≈ 9 frames) between shots
     const ast::InputState noInput;
     ast::InputState fireInput;
     fireInput.fire = true;
     game.update(1.0F / 60.0F, fireInput);
-    game.update(1.0F / 60.0F, noInput);
+    for (int i = 0; i < 10; ++i) { game.update(1.0F / 60.0F, noInput); }
     game.update(1.0F / 60.0F, fireInput);
-    game.update(1.0F / 60.0F, noInput);
+    for (int i = 0; i < 10; ++i) { game.update(1.0F / 60.0F, noInput); }
 
     for (int i = 0; i < 40; ++i) { game.update(1.0F / 60.0F, noInput); }
 

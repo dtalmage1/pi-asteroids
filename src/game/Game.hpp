@@ -90,7 +90,7 @@ private:
     float                 gameOverTimer_      = 0.0F;
     float                 beatTimer_          = 0.0F;
     bool                  beatPhase_          = false;
-    bool                  prevFireInput_      = false;
+    float                 fireCooldown_        = 0.0F;
     bool                  prevHyperspaceInput_= false;
     std::uint32_t         frameCount_         = 0U;
 };
