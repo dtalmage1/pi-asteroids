@@ -37,12 +37,18 @@ add_executable(unit_tests
     unit/AudioEventTest.cpp
     unit/SaucerAudioTest.cpp
     unit/BeatTest.cpp
+    unit/GlyphTest.cpp
+    unit/PitchDetectorTest.cpp
+    unit/NoteUtilsTest.cpp
+    unit/PitchColourTest.cpp
+    unit/AudioCaptureTest.cpp
 )
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/unit)
 target_link_libraries(unit_tests PRIVATE
     gtest_main
     gmock
     lib_game
+    lib_pitch
 )
 
 include(GoogleTest)

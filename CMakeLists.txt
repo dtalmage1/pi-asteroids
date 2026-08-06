@@ -79,6 +79,7 @@ target_link_libraries(lib_input PRIVATE SDL2::SDL2-static)
 # ── Audio library ─────────────────────────────────────────────────────────────
 add_library(lib_audio STATIC
     src/audio/Sdl2AudioSink.cpp
+    src/audio/Sdl2AudioCapture.cpp
 )
 target_include_directories(lib_audio PUBLIC src)
 # Target name differs between static and shared builds of SDL2_mixer.
@@ -93,6 +94,17 @@ if(NOT SDL2MIXER_TARGET)
     message(FATAL_ERROR "Could not find a linkable SDL2_mixer target")
 endif()
 target_link_libraries(lib_audio PRIVATE ${SDL2MIXER_TARGET} SDL2::SDL2-static)
+
+# ── Pitch library — NO SDL2 dependency ────────────────────────────────────────
+# Pitch detection, note naming, and note colour are pure signal-processing /
+# math code, kept out of any SDL2-dependent target so they stay unit-testable
+# in the headless CI environment (same rationale as lib_game).
+add_library(lib_pitch STATIC
+    src/pitch/PitchDetector.cpp
+    src/pitch/NoteUtils.cpp
+    src/pitch/PitchColour.cpp
+)
+target_include_directories(lib_pitch PUBLIC src)
 
 # ── Executable ────────────────────────────────────────────────────────────────
 add_executable(asteroids src/main.cpp)
@@ -113,6 +125,17 @@ add_custom_command(TARGET asteroids POST_BUILD
     COMMENT "Copying audio assets"
 )
 
+# ── Singing frequency analyzer — standalone tool, separate binary ────────────
+add_executable(pitch_analyzer src/pitch_analyzer_main.cpp)
+target_link_libraries(pitch_analyzer PRIVATE
+    lib_game
+    lib_platform
+    lib_rendering
+    lib_audio
+    lib_pitch
+    SDL2::SDL2-static
+)
+
 # ── vsync ─────────────────────────────────────────────────────────────────────
 option(ENABLE_VSYNC "Enable SDL2 vsync (SDL_RENDERER_PRESENTVSYNC)" OFF)
 if(ENABLE_VSYNC)
@@ -130,7 +153,8 @@ if(CLANG_TIDY_EXE AND ENABLE_CLANG_TIDY)
     message(STATUS "clang-tidy: ${CLANG_TIDY_EXE}")
     set(_CT_CMD "${CLANG_TIDY_EXE}")
     set_target_properties(
-        lib_game lib_platform lib_rendering lib_input lib_audio asteroids
+        lib_game lib_platform lib_rendering lib_input lib_audio lib_pitch
+        asteroids pitch_analyzer
         PROPERTIES CXX_CLANG_TIDY "${_CT_CMD}"
     )
 elseif(CLANG_TIDY_EXE)

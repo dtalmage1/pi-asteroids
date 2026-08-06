@@ -8,6 +8,18 @@ Format: one entry per merged PR, newest first.
 ## [Unreleased]
 
 ### Added
+- Singing frequency analyzer: standalone `pitch_analyzer` tool (separate binary from
+  `asteroids`) that listens to the microphone and shows the detected pitch as a number
+  and a note-coloured scrolling graph. `PitchDetector` (normalised autocorrelation with
+  parabolic peak interpolation, `lib_pitch`, no SDL2 dependency) estimates the
+  fundamental frequency from a rolling sample window; `frequencyToNote` converts it to
+  scientific pitch notation (e.g. `A4`) with cents deviation; `pitchClassColour` maps
+  each of the 12 semitones to a distinct hue. `IAudioCapture` / `Sdl2AudioCapture` wrap
+  SDL2's raw capture device API (distinct from SDL2_mixer, which only plays audio).
+  `Glyph.cpp` extended with `B`, `C`, `F`, `H`, `Z`, `#`, `.`, `-` to render note names and
+  `Hz` units with the existing stroke font. 28 new tests; 214/214 passing.
+
+### Added
 - RND-6: Explosion particles — `Particle` struct (`position`, `velocity`, `lifetime`,
   `maxLifetime`, `active`); `kMaxParticles=128` fixed-size pool; `spawnExplosion(pos, count)`
   seeds from `particleSeed_` counter, picks random directions/speeds/lifetimes;
